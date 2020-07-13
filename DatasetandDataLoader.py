@@ -70,7 +70,7 @@ def load_images_and_labels(test=False, colab=False):
             sat_image_folder = '/content/Sat_Image_Dataset/Train/Images'
             labels_folder =  '/content/Sat_Image_Dataset/Train/Labels'
         image_prefix = 'Manchester Area clipped_Index_'
-        
+
     else:
         if colab==False:
             sat_image_folder = 'C:/Users/rdroz/Documents/Dissertation Data Files/Test/Images'
@@ -78,7 +78,7 @@ def load_images_and_labels(test=False, colab=False):
         else:
             sat_image_folder = '/content/Sat_Image_Dataset/Test/Images'
             labels_folder =  '/content/Sat_Image_Dataset/Test/Labels'
-        image_prefix = 'Test Set_clipped_Index_'
+        image_prefix = 'Test Set clipped_Index_'
     
     shapefile_list = os.listdir(labels_folder)
     image_type = '.tif'
