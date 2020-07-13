@@ -67,7 +67,7 @@ def load_images_and_labels(test=False, colab=False):
             sat_image_folder = 'C:/Users/rdroz/Documents/Dissertation Data Files/Train/Images'
             labels_folder = 'C:/Users/rdroz/Documents/Dissertation Data Files/Train/Labels'
         else:
-            sat_image_folder = '/content/Sat_Image_Dataset/Train/Satellite Images'
+            sat_image_folder = '/content/Sat_Image_Dataset/Train/Images'
             labels_folder =  '/content/Sat_Image_Dataset/Train/Labels'
         image_prefix = 'Manchester Area clipped_Index_'
         
@@ -76,7 +76,7 @@ def load_images_and_labels(test=False, colab=False):
             sat_image_folder = 'C:/Users/rdroz/Documents/Dissertation Data Files/Test/Images'
             labels_folder = 'C:/Users/rdroz/Documents/Dissertation Data Files/Test/Labels'
         else:
-            sat_image_folder = '/content/Sat_Image_Dataset/Test/Satellite Images'
+            sat_image_folder = '/content/Sat_Image_Dataset/Test/Images'
             labels_folder =  '/content/Sat_Image_Dataset/Test/Labels'
         image_prefix = 'Test Set_clipped_Index_'
     
@@ -156,22 +156,12 @@ class SatImageDataset(Dataset):
 # In[25]:
 
 
-sat_mean = torch.tensor(
-    [[[[486.7721]], [[700.7301]], [[608.2152]], [[2999.1746]], [[1773.8333]],
-      [[2874.8039]], [[975.5184]]]],
-    dtype=torch.float64)
 
 
 # In[26]:
 
 
-sat_std = torch.tensor(
-    [[[[192.2344]], [[205.4212]], [[269.9312]], [[961.5902]], [[390.0145]],
-      [[197.9348]], [[303.7064]]]],
-    dtype=torch.float64)
-
-
-# dataset = SatImageDataset(test=True, colab=False, normalize=True, mean=sat_mean, std=sat_std)
+# In[ ]:
 
 # first = dataset[2]
 
