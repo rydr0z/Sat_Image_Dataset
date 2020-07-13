@@ -78,7 +78,7 @@ def load_images_and_labels(test=False, colab=False):
         else:
             sat_image_folder = '/content/Sat_Image_Dataset/Test/Satellite Images'
             labels_folder =  '/content/Sat_Image_Dataset/Test/Labels'
-        image_prefix = 'Test Set clipped_Index_'
+        image_prefix = 'Test Set_clipped_Index_'
     
     shapefile_list = os.listdir(labels_folder)
     image_type = '.tif'
