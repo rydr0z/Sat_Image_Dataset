@@ -153,15 +153,17 @@ class SatImageDataset(Dataset):
 
 # ## Test Dataset Class
 
-# In[25]:
+# sat_mean = torch.tensor(
+#     [[[[486.7721]], [[700.7301]], [[608.2152]], [[2999.1746]], [[1773.8333]],
+#       [[2874.8039]], [[975.5184]]]],
+#     dtype=torch.float64)
 
+# sat_std = torch.tensor(
+#     [[[[192.2344]], [[205.4212]], [[269.9312]], [[961.5902]], [[390.0145]],
+#       [[197.9348]], [[303.7064]]]],
+#     dtype=torch.float64)
 
-
-
-# In[26]:
-
-
-# In[ ]:
+# dataset = SatImageDataset(test=True, colab=False, normalize=True, mean=sat_mean, std=sat_std)
 
 # first = dataset[2]
 
