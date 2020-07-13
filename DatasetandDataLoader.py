@@ -81,7 +81,6 @@ def load_images_and_labels(test=False, colab=False):
         image_prefix = 'Test Set clipped_Index_'
     
     shapefile_list = os.listdir(labels_folder)
-    print(shapefile_list)
     image_type = '.tif'
     label_prefix = 'Index_'
     label_type = '.gpkg'
@@ -98,7 +97,6 @@ def load_images_and_labels(test=False, colab=False):
         i = sf.lstrip('Index_').rstrip('.gpkg')
 
         # Open image, convert to tensor and crop image, append to list
-        print(sat_image_folder+'/'+image_prefix+i+image_type)
         gdal_data = gdal.Open(sat_image_folder+'/'+image_prefix+i+image_type)
         image = gdal_data.ReadAsArray()
         image = random_crop_image(image)
