@@ -21,10 +21,10 @@ import os
 
 # # Helper Functions
 
-# In[18]:
+# In[36]:
 
 
-def random_crop_image(image, crp_h=33, crp_w=55):
+def random_crop_image(image, crp_h=33, crp_w=50):
     '''Return a randomly cropped image with dimensions
     [channels x crp_h x crp_w] given an image with dimensions
     [channels x h x w] where h > crp_h and w > crp_w
