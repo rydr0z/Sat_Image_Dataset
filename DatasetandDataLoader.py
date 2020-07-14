@@ -69,7 +69,7 @@ def load_images_and_labels(test=False, colab=False):
         else:
             sat_image_folder = '/content/Sat_Image_Dataset/Train/Images'
             labels_folder =  '/content/Sat_Image_Dataset/Train/Labels'
-        image_prefix = 'Manchester Area clipped_Index_'
+        image_prefix = 'Train Set clipped_Index_'
 
     else:
         if colab==False:
