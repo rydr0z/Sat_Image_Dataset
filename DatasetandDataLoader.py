@@ -3,7 +3,7 @@
 
 # # Imports
 
-# In[17]:
+# In[15]:
 
 
 import torch
@@ -21,7 +21,7 @@ import os
 
 # # Helper Functions
 
-# In[36]:
+# In[2]:
 
 
 def random_crop_image(image, crp_h=33, crp_w=50):
@@ -53,7 +53,23 @@ def random_crop_image(image, crp_h=33, crp_w=50):
     return cropped_image
 
 
-# In[28]:
+# In[51]:
+
+
+def horizontal_flip(image):
+    image = torch.flip(image, [1])
+    return image
+
+
+# In[52]:
+
+
+def vertical_flip(image):
+    image = torch.flip(image, [2])
+    return image
+
+
+# In[3]:
 
 
 def load_images_and_labels(test=False, colab=False):
@@ -99,7 +115,6 @@ def load_images_and_labels(test=False, colab=False):
         # Open image, convert to tensor and crop image, append to list
         gdal_data = gdal.Open(sat_image_folder+'/'+image_prefix+i+image_type)
         image = gdal_data.ReadAsArray()
-        image = random_crop_image(image)
         image = torch.tensor(image)
         image_list.append(image)
         gdal_data = None
@@ -118,7 +133,7 @@ def load_images_and_labels(test=False, colab=False):
     return image_list, label_list, geo_list
 
 
-# In[29]:
+# In[4]:
 
 
 def normalize_fn(x, mean, std):
@@ -129,22 +144,31 @@ def normalize_fn(x, mean, std):
 
 # # Create custom Dataset Class
 
-# In[30]:
+# In[5]:
 
 
 class SatImageDataset(Dataset):
 
-    def __init__(self, test=False, colab=False, normalize=False, mean=None, std=None):
+    def __init__(self, test=False, colab=False, normalize=False, mean=None, std=None, flip=False):
         # data loading
         self.x, self.y, self.geo = load_images_and_labels(test=test, colab=colab)
         if normalize==True:
             normalize_fn(self.x, mean, std)
         self.n_images = len(self.x)
+        self.flip = flip
             
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
-            
+        self.x[index] = random_crop_image(self.x[index])
+        
+        if self.flip == True:
+            if torch.rand(1) < 0.25:
+                self.x[index] = horizontal_flip(self.x[index])
+                
+            if torch.rand(1) < 0.25:
+                self.x[index] = vertical_flip(self.x[index])
+                
         return self.x[index], self.y[index]
         
     def __len__(self):
@@ -162,8 +186,6 @@ class SatImageDataset(Dataset):
 #     [[[[192.2344]], [[205.4212]], [[269.9312]], [[961.5902]], [[390.0145]],
 #       [[197.9348]], [[303.7064]]]],
 #     dtype=torch.float64)
-
-# dataset = SatImageDataset(test=True, colab=False, normalize=True, mean=sat_mean, std=sat_std)
 
 # first = dataset[2]
 

@@ -53,7 +53,7 @@ def show_images(band, cmap, dataset):
     for i in range(1, columns * rows + 1):
         image, label = vis_images[i-1], vis_labels[i-1]
         ax.append(fig.add_subplot(rows, columns, i))
-        ax[-1].set_title("Image {i} - Population: ".format(i=i) + str(label[1].item()))
+        ax[-1].set_title("Image {i} - Population: ".format(i=i) + str(label[:,1,:].item()))
         if band != 5:
             plt.imshow(image[0].permute(2, 1, 0)[:, :, band]/3000, cmap=cmap)
         else:
