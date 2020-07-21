@@ -30,7 +30,20 @@ def calculate_std(dataset):
     std = torch.std(images, dim=(0,2,3), keepdim=True)
     return std
     
-def show_images(band, cmap):
+def show_images(band, cmap, images, labels):
+
+    train_loader_for_vis = torch.utils.data.DataLoader(train_dataset,
+                                                   batch_size=1,
+                                                   shuffle=True)
+
+    vis_images = []
+    vis_labels = []
+
+    for i in range(1,6):
+        vis_image, vis_label = iter(train_loader_for_vis).next()
+        vis_images.append(vis_image)
+        vis_labels.append(vis_label)
+
     fig = plt.figure(figsize=(33, 50))
     columns = 5
     rows = 1
