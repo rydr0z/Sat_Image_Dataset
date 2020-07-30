@@ -72,6 +72,15 @@ def vertical_flip(image):
 # In[3]:
 
 
+def classify(label):
+    bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17]
+    for c, bound in enumerate(bounds):
+        if label[1] < bound:
+            label = torch.cat((label, torch.tensor([[c]])), dim=0)
+            break
+    return label
+
+
 def load_images_and_labels(test=False, colab=False):
     '''
     Function for loading TIF images and corresponding shapefiles with population labels.
@@ -125,6 +134,7 @@ def load_images_and_labels(test=False, colab=False):
         index = shp['Index']
         geometry = shp['geometry']
         label = torch.tensor([index, label])
+        label = classify(label)
         geometry = [index, geometry]
         label_list.append(label)
         geo_list.append(geometry)
