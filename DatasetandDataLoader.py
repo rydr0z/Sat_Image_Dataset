@@ -173,10 +173,10 @@ class SatImageDataset(Dataset):
         self.x[index] = random_crop_image(self.x[index])
         
         if self.flip == True:
-            if torch.rand(1) < 0.25:
+            if torch.rand(1) < 0.5:
                 self.x[index] = horizontal_flip(self.x[index])
                 
-            if torch.rand(1) < 0.25:
+            if torch.rand(1) < 0.5:
                 self.x[index] = vertical_flip(self.x[index])
                 
         return self.x[index], self.y[index]
