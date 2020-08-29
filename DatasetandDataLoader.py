@@ -73,7 +73,7 @@ def vertical_flip(image):
 
 
 def classify(label):
-    bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17]
+    bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16]
     for c, bound in enumerate(bounds):
         if label[1] < bound:
             label = torch.cat((label, torch.tensor([[c]])), dim=0)
@@ -154,8 +154,6 @@ def normalize_fn(x, mean, std):
 
 # # Create custom Dataset Class
 
-# In[5]:
-
 
 class SatImageDataset(Dataset):
 
@@ -183,47 +181,3 @@ class SatImageDataset(Dataset):
         
     def __len__(self):
         return self.n_images
-
-
-# ## Test Dataset Class
-
-# sat_mean = torch.tensor(
-#     [[[[486.7721]], [[700.7301]], [[608.2152]], [[2999.1746]], [[1773.8333]],
-#       [[2874.8039]], [[975.5184]]]],
-#     dtype=torch.float64)
-
-# sat_std = torch.tensor(
-#     [[[[192.2344]], [[205.4212]], [[269.9312]], [[961.5902]], [[390.0145]],
-#       [[197.9348]], [[303.7064]]]],
-#     dtype=torch.float64)
-
-# first = dataset[2]
-
-# image, label = first
-
-# print(image)
-
-# print(label)
-
-# image[torch.isnan(image)] = 0
-
-# print(image)
-
-# image.shape
-
-# print(type(image), type(label))
-
-# plt.imshow(image.permute(2, 1, 0)[:,:,0:3]/3000)
-
-# ## Test DataLoader:
-# Visualizing one image and label at a time
-
-# dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=True)
-
-# dataiter = iter(dataloader)
-
-# data = dataiter.next()
-# image_iter, labels_iter = data
-# print(image_iter.shape)
-# plt.imshow(image_iter[0].permute(2, 1, 0)[:,:,3])
-# print(labels_iter)
