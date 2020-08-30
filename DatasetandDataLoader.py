@@ -168,16 +168,18 @@ class SatImageDataset(Dataset):
     def __getitem__(self, index):
         if torch.is_tensor(index):
             index = index.tolist()
-        self.x[index] = random_crop_image(self.x[index])
+        im = random_crop_image(self.x[index])
         
         if self.flip == True:
+			im = None
             if torch.rand(1) < 0.5:
-                self.x[index] = horizontal_flip(self.x[index])
+                im = horizontal_flip(self.x[index])
+			    if torch.rand(1) < 0.5:
+                    self.x[index] = vertical_flip(im)
+            elif torch.rand(1) < 0.5:
+                im = vertical_flip(self.x[index])
                 
-            if torch.rand(1) < 0.5:
-                self.x[index] = vertical_flip(self.x[index])
-                
-        return self.x[index], self.y[index]
+        return im, self.y[index]
         
     def __len__(self):
         return self.n_images
