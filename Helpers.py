@@ -75,7 +75,7 @@ def show_images(band, cmap, dataset, seed):
     plt.savefig("\content\drive\My Drive\Dissertation Files\Exported Figures\Example Images - Band {}".format(band), format="png")
     
 
-def load_datasets(flip=False):
+def load_datasets(flip=False, calculate_stats=False):
     """Runs functions to create normalized train and test datasets.
     Arguments:
         flip (bool, optional): activates random horizontal and vertical flips data augmentation for dataset.
@@ -85,13 +85,41 @@ def load_datasets(flip=False):
     import sys
     sys.path.append('/content/Sat_Image_Dataset')
     from DatasetandDataLoader import SatImageDataset
+    if calculate_stats:
+        train_dataset_raw = SatImageDataset(test=False,
+                                            colab=True,
+                                            flip=False)
+        clean_dataset(train_dataset_raw)
+        sat_mean = calculate_mean(train_dataset_raw)
+        sat_std = calculate_std(train_dataset_raw)
+    else:
+        sat_mean = tensor([[[[ 481.4347]],
 
-    train_dataset_raw = SatImageDataset(test=False,
-                                    colab=True,
-                                    flip=False)
-    clean_dataset(train_dataset_raw)
-    sat_mean = calculate_mean(train_dataset_raw)
-    sat_std = calculate_std(train_dataset_raw)
+         [[ 661.0318]],
+
+         [[ 633.2782]],
+
+         [[2610.5615]],
+
+         [[1754.3627]],
+
+         [[2808.4644]],
+
+         [[ 987.0544]]]], dtype=torch.float64)
+        
+        sat_std = tensor([[[[182.0427]],
+
+         [[221.7736]],
+
+         [[282.7514]],
+
+         [[989.6967]],
+
+         [[604.5539]],
+
+         [[463.1821]],
+
+         [[403.9931]]]], dtype=torch.float64)
 
     print("""=============================================\
     \nMean for image channels:""")
@@ -109,7 +137,7 @@ def load_datasets(flip=False):
     clean_dataset(train_dataset_model)
 
     print("""=============================================\
-	\nTraining Set Images: """ + \
+    \nTraining Set Images: """ + \
      str(train_dataset_model.n_images))
 
     test_dataset = SatImageDataset(test=True,
@@ -237,16 +265,50 @@ def population_hist(dataset, bins=10, figsize=(20,10)):
         pop_list.append(pop)
     bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
     return bins_list
-	
-def class_hist(dataset, bins=range(0,15), figsize=(20,10)):
+
+def class_hist(dataset, bins=range(0, 16), figsize=(20, 10)):
     import matplotlib.ticker as ticker
-    fig, ax = plt.subplots(1,1,figsize=figsize)
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
     class_list = []
     for i in range(0, len(dataset)):
         cl = dataset[i][1][2].item()
         class_list.append(cl)
-    bins_list = sn.distplot(class_list, bins=bins, kde=False, norm_hist=False, ax=ax)
+    bins_list = plt.hist(class_list, bins=bins)
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
-    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0,15)+0.5))
-    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14']))
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0, 16) + 0.5))
+    ax.xaxis.set_minor_formatter(
+        ticker.FixedFormatter([
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+            '13', '14'
+        ]))
+    return bins_list
+
+def population_hist(dataset, bins=10, figsize=(20,10)):
+    fig, ax = plt.subplots(1,1,figsize=figsize)
+    pop_list = []
+    for i in range(0, len(dataset)):
+        pop = dataset[i][1][1].item()
+        pop_list.append(pop)
+    bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
+    return bins_list
+
+def balanced_class_hist(train_loader, bins=range(0, 16), figsize=(20, 10)):
+    import matplotlib.ticker as ticker
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    cl_list = []
+    iter_loader_test = iter(train_loader)
+    for i in range(0, len(train_loader)):
+        image, label = iter_loader_test.next()
+        for j in range(0, label.shape[0]):
+            cl = label[1][2].item()
+            cl_list.append(cl)
+    bins_list = plt.hist(cl_list, bins=bins)
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0, 16) + 0.5))
+    ax.xaxis.set_minor_formatter(
+        ticker.FixedFormatter([
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+            '13', '14'
+        ]))
+    plt.grid(which='major')
     return bins_list
