@@ -238,7 +238,7 @@ def population_hist(dataset, bins=10, figsize=(20,10)):
     bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
     return bins_list
 	
-def class_hist(dataset, bins=range(0,17), figsize=(20,10)):
+def class_hist(dataset, bins=range(0,15), figsize=(20,10)):
     import matplotlib.ticker as ticker
     fig, ax = plt.subplots(1,1,figsize=figsize)
     class_list = []
@@ -247,6 +247,6 @@ def class_hist(dataset, bins=range(0,17), figsize=(20,10)):
         class_list.append(cl)
     bins_list = sn.distplot(class_list, bins=bins, kde=False, norm_hist=False, ax=ax)
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
-    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0,17)+0.5))
-    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16']))
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0,15)+0.5))
+    ax.xaxis.set_minor_formatter(ticker.FixedFormatter(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14']))
     return bins_list
