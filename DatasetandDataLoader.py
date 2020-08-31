@@ -73,11 +73,14 @@ def vertical_flip(image):
 
 
 def classify(label):
-    bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16]
-    for c, bound in enumerate(bounds):
-        if label[1] < bound:
-            label = torch.cat((label, torch.tensor([[c]])), dim=0)
-            break
+    bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
+	if label[1] > bounds[-1]:
+            label = torch.cat((label, torch.tensor([[len(bounds)+1]])), dim=0)
+	else:
+        for c, bound in enumerate(bounds):
+            if label[1] < bound:
+                label = torch.cat((label, torch.tensor([[c]])), dim=0)
+                break
     return label
 
 
