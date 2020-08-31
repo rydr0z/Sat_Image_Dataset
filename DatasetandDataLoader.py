@@ -74,9 +74,9 @@ def vertical_flip(image):
 
 def classify(label):
     bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
-	if label[1] > bounds[-1]:
-            label = torch.cat((label, torch.tensor([[len(bounds)+1]])), dim=0)
-	else:
+    if label[1] > bounds[-1]:
+        label = torch.cat((label, torch.tensor([[len(bounds)+1]])), dim=0)
+    else:
         for c, bound in enumerate(bounds):
             if label[1] < bound:
                 label = torch.cat((label, torch.tensor([[c]])), dim=0)
@@ -160,13 +160,14 @@ def normalize_fn(x, mean, std):
 
 class SatImageDataset(Dataset):
 
-    def __init__(self, test=False, colab=False, normalize=False, mean=None, std=None, flip=False):
+    def __init__(self, test=False, colab=False, normalize=False, mean=None, std=None, flip=False, flip_prob=0.25):
         # data loading
         self.x, self.y, self.geo = load_images_and_labels(test=test, colab=colab)
         if normalize==True:
             normalize_fn(self.x, mean, std)
         self.n_images = len(self.x)
         self.flip = flip
+        self.flip_prob = flip_prob
             
     def __getitem__(self, index):
         if torch.is_tensor(index):
@@ -174,9 +175,9 @@ class SatImageDataset(Dataset):
         im = random_crop_image(self.x[index])
         
         if self.flip == True:
-            if torch.rand(1) < 0.5:
+            if torch.rand(1) < self.flip_prob:
                 im = horizontal_flip(im)
-            elif torch.rand(1) < 0.5:
+            elif torch.rand(1) < self.flip_prob:
                 im = vertical_flip(im)
                 
         return im, self.y[index]
