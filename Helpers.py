@@ -79,7 +79,13 @@ def load_datasets(flip=False):
     """Runs functions to create normalized train and test datasets.
     Arguments:
         flip (bool, optional): activates random horizontal and vertical flips data augmentation for dataset.
+    Returns:
+        training dataset, test dataset, channel means, channel standard deviations
     """
+    import sys
+    sys.path.append('/content/Sat_Image_Dataset')
+    from DatasetandDataLoader import SatImageDataset
+
     train_dataset_raw = SatImageDataset(test=False,
                                     colab=True,
                                     flip=False)
@@ -87,11 +93,11 @@ def load_datasets(flip=False):
     sat_mean = calculate_mean(train_dataset_raw)
     sat_std = calculate_std(train_dataset_raw)
 
-    print("""=============================================
-    Mean of each image channel""")
+    print("""=============================================\
+    \nMean for image channels:""")
     print(sat_mean)
-    print("""=============================================
-    Standard deviation of each image channel""")
+    print("""=============================================\
+    \nStandard deviation for image channels:""")
     print(sat_std)
 
     train_dataset_model = SatImageDataset(test=False,
@@ -102,8 +108,8 @@ def load_datasets(flip=False):
                                           flip=flip)
     clean_dataset(train_dataset_model)
 
-    print("""
-    =============================================Training Set Images: """ + \
+    print("""=============================================\
+	\nTraining Set Images: """ + \
      str(train_dataset_model.n_images))
 
     test_dataset = SatImageDataset(test=True,
@@ -112,10 +118,10 @@ def load_datasets(flip=False):
                                    mean=sat_mean,
                                    std=sat_std)
     clean_dataset(test_dataset)
-    print("""=============================================
-    Test Set Images: """ + str(test_dataset.n_images))
+    print("""=============================================\
+    \nTest Set Images: """ + str(test_dataset.n_images))
     
-    return train_dataset, test_dataset
+    return train_dataset_model, test_dataset, sat_mean, sat_std
 
 def plot_results(results_dict, figname="Figure", accuracy=False):
     """ Plot training log results from saved dict, must include Training and Validation Loss and Learning Rate

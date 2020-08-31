@@ -46,11 +46,11 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
         elif isinstance(dataset, torchvision.datasets.ImageFolder):
             return dataset.imgs[idx][1]
         elif isinstance(dataset, torch.utils.data.Subset):
-            return dataset[idx][1] # edited for use in model
+            return dataset[idx][1][2].item() # edited for use in model
         elif self.callback_get_label:
             return self.callback_get_label(dataset, idx)
         else:
-            raise NotImplementedError
+            return dataset[idx][1][2].item()
                 
     def __iter__(self):
         return (self.indices[i] for i in torch.multinomial(
