@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+import seaborn as sn
 from skimage import exposure
 
 
@@ -93,7 +94,7 @@ def load_datasets(flip=False, calculate_stats=False):
         sat_mean = calculate_mean(train_dataset_raw)
         sat_std = calculate_std(train_dataset_raw)
     else:
-        sat_mean = tensor([[[[ 481.4347]],
+        sat_mean = torch.tensor([[[[ 481.4347]],
 
          [[ 661.0318]],
 
@@ -107,7 +108,7 @@ def load_datasets(flip=False, calculate_stats=False):
 
          [[ 987.0544]]]], dtype=torch.float64)
         
-        sat_std = tensor([[[[182.0427]],
+        sat_std = torch.tensor([[[[182.0427]],
 
          [[221.7736]],
 
@@ -256,6 +257,43 @@ def test_classification(model, dataset, num_images, device):
         indices, preds, pop, accuracy, accuracy2, accuracy3, r_squared)
     )
     return pred_actual_list
+	
+	
+def test_regression(dataset, num_images):
+    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+    pred_actual_list = []
+    loader = torch.utils.data.DataLoader(dataset,
+                                         batch_size=1,
+                                         shuffle=False)
+    iter_loader = iter(loader)
+    for i in range(0, num_images):
+        images, labels = iter_loader.next()
+        images = images.float()
+        images, labels = images.to(device), labels.to(device)
+        model_reg.eval()
+        with torch.no_grad():
+            outputs = model_reg(images)
+        pred = int(outputs[0].item())
+        pop = labels[0][1].item()
+        index = labels[0][0].item()
+        pred_actual_list.append([index, pred, pop])
+
+    indices = [item[0] for item in pred_actual_list]
+    preds = [item[1] for item in pred_actual_list]
+    pop = [item[2] for item in pred_actual_list]
+
+    r_squared = r2_score(pop, preds)
+    mae = mean_absolute_error(pop, preds)
+    mse = mean_squared_error(pop, preds)
+
+    print("""Image Index: {}
+          \nModel Predictions: {}
+          \nActual Populations: {}
+          \nMAE: {:2f}
+          \nMSE: {:2f}
+          \nR^2: {:4f}""".format(indices, preds, pop, mae, mse, r_squared))
+    return pred_actual_list
 
 def population_hist(dataset, bins=10, figsize=(20,10)):
     fig, ax = plt.subplots(1,1,figsize=figsize)
@@ -312,3 +350,18 @@ def balanced_class_hist(train_loader, bins=range(0, 16), figsize=(20, 10)):
         ]))
     plt.grid(which='major')
     return bins_list
+
+def confusion_matrix(results):
+  from sklearn.metrics import confusion_matrix
+  data = confusion_matrix([item[2] for item in results], 
+                          [item[1] for item in results],
+                          normalize='pred')
+  df_cm = pd.DataFrame(data, columns=np.unique(
+      [item[2] for item in results]),
+      index=np.unique([item[2] for item in results]))
+  df_cm.index.name = 'Actual'
+  df_cm.columns.name = 'Predicted'
+  plt.figure(figsize=(20, 10))
+  sns.set(font_scale=1.4)  # for label size
+  sns.heatmap(df_cm, cmap="Blues", annot=True,
+              annot_kws={"size": 10})  # font size
