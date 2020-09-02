@@ -2,8 +2,18 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import seaborn as sn
-from skimage import exposure
 
+SMALL_SIZE = 14
+MEDIUM_SIZE = 16
+BIGGER_SIZE = 22
+
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
 def clean_dataset(dataset):
@@ -152,20 +162,15 @@ def load_datasets(flip=False, calculate_stats=False):
     
     return train_dataset_model, test_dataset, sat_mean, sat_std
 
-def plot_results(results_dict, figname="Figure", accuracy=False):
+def plot_results_cl(results_dict, figname="Figure"):
     """ Plot training log results from saved dict, must include Training and Validation Loss and Learning Rate
     for all variants. Optional Training and Validation Accuracy for Classification Result.
     Arguments:
         results_dict (dict): saved log from training run
         figname (string): Top title for figure
         accuracy (bool): True if want to plot accuracy
-    """
-    if accuracy:                                
-        fig, axs = plt.subplots(1,3, figsize=(20,5))
-        i = 1
-    else:
-        fig, axs = plt.subplots(1,2, figsize=(20,5))
-        i = 0
+    """                               
+    fig, axs = plt.subplots(1,3, figsize=(30,5))
 
     plt.suptitle(figname, y=1.1)
     axs[0].plot(results_dict["Training Loss"], label="Training Loss")
@@ -176,31 +181,72 @@ def plot_results(results_dict, figname="Figure", accuracy=False):
     axs[0].set_ylabel("Loss")
     axs[0].legend()
     
-    if accuracy:
-        axs[i].plot(results_dict["Training Accuracy"], label="Training Accuracy")
-        axs[i].plot(results_dict["Validation Accuracy"], label="Validation Accuracy")
-        axs[i].axvline(results_dict["Validation Accuracy"].index(max(results_dict["Validation Accuracy"])), 
-                 label="Highest Val Acc", linestyle=':')
-        axs[i].set_title("Model Accuracy over Training Epochs")
-        axs[i].set_xlabel("Epoch")
-        axs[i].set_ylabel("Accuracy")
-        axs[i].legend()
+    axs[1].plot(results_dict["Training Accuracy"], label="Training Accuracy")
+    axs[1].plot(results_dict["Validation Accuracy"], label="Validation Accuracy")
+    axs[1].axvline(results_dict["Validation Accuracy"].index(max(results_dict["Validation Accuracy"])), 
+             label="Highest Val Acc", linestyle=':')
+    axs[1].set_title("Model Accuracy over Training Epochs")
+    axs[1].set_xlabel("Epoch")
+    axs[1].set_ylabel("Accuracy")
+    axs[1].legend()
 
-    axs[i+1].plot(results_dict["Learning Rate"], label="Training Accuracy")
-    axs[i+1].set_title("Learning Rate over Training Epochs")
-    axs[i+1].set_xlabel("Epoch")
-    axs[i+1].set_ylabel("Learning Rate")
+    axs[2].plot(results_dict["Learning Rate"], label="Training Accuracy")
+    axs[2].set_title("Learning Rate over Training Epochs")
+    axs[2].set_xlabel("Epoch")
+    axs[2].set_ylabel("Learning Rate")
     plt.show()
+    
 
     print("""Lowest Validation Loss: {:.4f} - Epoch: {}\nHighest Validation Accuracy: {:.4f}% - Epoch {}""".format(
-    min(results_dict["Validation Loss"]),
-    results_dict["Validation Loss"].index(min(results_dict["Validation Loss"])),
-    max(results_dict["Validation Accuracy"])*100,
-    results_dict["Validation Accuracy"].index(max(results_dict["Validation Accuracy"])))
-    )
+        min(results_dict["Validation Loss"]),
+        results_dict["Validation Loss"].index(min(results_dict["Validation Loss"])),
+        max(results_dict["Validation Accuracy"])*100,
+        results_dict["Validation Accuracy"].index(max(results_dict["Validation Accuracy"])))
+         )
     
+def plot_results_reg(results_dict, figname="Figure"):
+    """ Plot training log results from saved dict, must include Training and Validation Loss and Learning Rate
+    for all variants. Optional Training and Validation Accuracy for Classification Result.
+    Arguments:
+        results_dict (dict): saved log from training run
+        figname (string): Top title for figure
+        accuracy (bool): True if want to plot accuracy
+    """                              
+    fig, axs = plt.subplots(1,3, figsize=(30,5))
+
+    plt.suptitle(figname, y=1.1)
+    axs[0].plot(results_dict["Training Loss"], label="Training Loss")
+    axs[0].plot(results_dict["Validation Loss"], label="Validation Loss")
+    axs[0].axvline(results_dict["Validation Loss"].index(min(results_dict["Validation Loss"])), label="Lowest Val Loss", linestyle=':')
+    axs[0].set_title("Model Loss over Training Epochs")
+    axs[0].set_xlabel("Epoch")
+    axs[0].set_ylabel("Loss")
+    axs[0].legend()
+    
+    axs[1].plot(results_dict["Training RMSE"], label="Training RMSE")
+    axs[1].plot(results_dict["Validation RMSE"], label="Validation RMSE")
+    axs[1].axvline(results_dict["Validation RMSE"].index(min(results_dict["Validation RMSE"])), 
+             label="Lowest Val RMSE", linestyle=':')
+    axs[1].set_title("Model RMSE over Training Epochs")
+    axs[1].set_xlabel("Epoch")
+    axs[1].set_ylabel("RMSE")
+    axs[1].legend()
+
+    axs[2].plot(results_dict["Learning Rate"], label="Training Accuracy")
+    axs[2].set_title("Learning Rate over Training Epochs")
+    axs[2].set_xlabel("Epoch")
+    axs[2].set_ylabel("Learning Rate")
+    plt.show()
+
+    print("""Lowest Validation Loss: {:.4f} - Epoch: {}\nLowest RMSE: {:.4f} - Epoch {}""".format(
+        min(results_dict["Validation Loss"]),
+        results_dict["Validation Loss"].index(min(results_dict["Validation Loss"])),
+        min(results_dict["Validation RMSE"]),
+        results_dict["Validation RMSE"].index(min(results_dict["Validation RMSE"])))
+         )
+            
 def test_classification(model, dataset, num_images, device):
-    from sklearn.metrics import r2_score
+    from sklearn.metrics import classification_report
     pred_actual_list = []
     loader = torch.utils.data.DataLoader(dataset,
                                          batch_size=1,
@@ -245,7 +291,7 @@ def test_classification(model, dataset, num_images, device):
     accuracy3 = (np.logical_or(np.logical_or((preds_np == pop_np),
                                              (preds2_np == pop_np)), (preds3_np == pop_np))).sum() / preds3_np.size * 100
 
-    r_squared = r2_score(pop, preds)
+    cl_report = classification_report(pop, preds)
 
     print("""Image Index: {}
     \nModel Predictions: {}
@@ -253,27 +299,29 @@ def test_classification(model, dataset, num_images, device):
     \nOverall Accuracy (Top 1): {:2f}%
     \nOverall Accuracy (Top 2): {:2f}%
     \nOverall Accuracy (Top 3): {:2f}%
-    \nR^2: {:4f}""".format(
-        indices, preds, pop, accuracy, accuracy2, accuracy3, r_squared)
+    \n
+    \n{}""".format(
+        indices, preds, pop, accuracy, accuracy2, accuracy3, cl_report)
     )
     return pred_actual_list
-	
-	
-def test_regression(dataset, num_images):
-    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+def test_regression(model, dataset, num_images, device):
+    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, \
+    explained_variance_score
 
     pred_actual_list = []
     loader = torch.utils.data.DataLoader(dataset,
                                          batch_size=1,
                                          shuffle=False)
     iter_loader = iter(loader)
+    model.to(device)
     for i in range(0, num_images):
         images, labels = iter_loader.next()
         images = images.float()
         images, labels = images.to(device), labels.to(device)
-        model_reg.eval()
+        model.eval()
         with torch.no_grad():
-            outputs = model_reg(images)
+            outputs = model(images)
         pred = int(outputs[0].item())
         pop = labels[0][1].item()
         index = labels[0][0].item()
@@ -286,13 +334,15 @@ def test_regression(dataset, num_images):
     r_squared = r2_score(pop, preds)
     mae = mean_absolute_error(pop, preds)
     mse = mean_squared_error(pop, preds)
+    exp_var = explained_variance_score(pop, preds)
 
     print("""Image Index: {}
           \nModel Predictions: {}
           \nActual Populations: {}
-          \nMAE: {:2f}
-          \nMSE: {:2f}
-          \nR^2: {:4f}""".format(indices, preds, pop, mae, mse, r_squared))
+          \nMAE: {:.2f}
+          \nMSE: {:.2f}
+          \nR^2: {:.4f}
+          \nExplained Variance: {:.4f}""".format(indices, preds, pop, mae, mse, r_squared, exp_var))
     return pred_actual_list
 
 def population_hist(dataset, bins=10, figsize=(20,10)):
@@ -346,22 +396,22 @@ def balanced_class_hist(train_loader, bins=range(0, 17), figsize=(20, 10)):
     ax.xaxis.set_minor_formatter(
         ticker.FixedFormatter([
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
-            '13', '14', '15
+            '13', '14', '15'
         ]))
     plt.grid(which='major')
     return bins_list
 
 def confusion_matrix(results):
-  from sklearn.metrics import confusion_matrix
-  data = confusion_matrix([item[2] for item in results], 
+    from sklearn.metrics import confusion_matrix
+    data = confusion_matrix([item[2] for item in results], 
                           [item[1] for item in results],
                           normalize='pred')
-  df_cm = pd.DataFrame(data, columns=np.unique(
+    df_cm = pd.DataFrame(data, columns=np.unique(
       [item[2] for item in results]),
       index=np.unique([item[2] for item in results]))
-  df_cm.index.name = 'Actual'
-  df_cm.columns.name = 'Predicted'
-  plt.figure(figsize=(20, 10))
-  sns.set(font_scale=1.4)  # for label size
-  sns.heatmap(df_cm, cmap="Blues", annot=True,
+    df_cm.index.name = 'Actual'
+    df_cm.columns.name = 'Predicted'
+    plt.figure(figsize=(20, 10))
+    sns.set(font_scale=1.4)  # for label size
+    sns.heatmap(df_cm, cmap="Blues", annot=True,
               annot_kws={"size": 10})  # font size
