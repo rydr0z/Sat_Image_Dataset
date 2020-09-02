@@ -72,11 +72,11 @@ def vertical_flip(image):
 # In[3]:
 
 
-def classify(label, classes=16):
+def classify(label, classes=6):
     if classes == 16:
         bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
-    if classes == 9:
-        bounds = [1, 10, 100, 500, 1000, 5000, 10000, 20000]
+    if classes == 6:
+        bounds = [1, 10, 100, 1000, 10000]
     if label[1] > bounds[-1]:
         label = torch.cat((label, torch.tensor([[len(bounds)]])), dim=0)
     else:

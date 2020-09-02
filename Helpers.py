@@ -376,10 +376,10 @@ def class_hist(dataset, figsize=(20, 10), classes=16):
                 '13', '14', '15'
             ]))
         
-    if classes == 9
+    if classes == 6:
         ax.xaxis.set_minor_formatter(
             ticker.FixedFormatter([
-                '0', '1', '2', '3', '4', '5', '6', '7', '8'
+                '0', '1', '2', '3', '4', '5'
             ]))
     return bins_list
 
@@ -412,11 +412,10 @@ def balanced_class_hist(train_loader, figsize=(20, 10), classes=16):
                 '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
                 '13', '14', '15'
             ]))
-    if classes == 9:
+    if classes == 6:
         ax.xaxis.set_minor_formatter(
             ticker.FixedFormatter([
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
-                '13', '14', '15'
+                '0', '1', '2', '3', '4', '5'
             ]))
     plt.grid(which='major')
     return bins_list
@@ -448,8 +447,8 @@ def shapefile_cl(results, classes=16):
     if classes == 16:
         bounds = [0, 2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2 **\
               8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15]
-    if classes == 9:
-        bounds = [0, 1, 10, 100, 500, 1000, 5000, 10000, 20000]
+    if classes == 6:
+        bounds = [0, 1, 10, 100, 1000, 10000]
     for c, bound in enumerate(bounds):
         condition = shapefile['Population'] >= bound
         shapefile.loc[condition, 'Pop Class'] = int(c)
