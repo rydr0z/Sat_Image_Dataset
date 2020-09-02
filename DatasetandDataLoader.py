@@ -72,8 +72,11 @@ def vertical_flip(image):
 # In[3]:
 
 
-def classify(label):
-    bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
+def classify(label, classes=16):
+    if classes == 16:
+        bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
+    if classes == 9:
+        bounds = [1, 10, 100, 500, 1000, 5000, 10000, 20000]
     if label[1] > bounds[-1]:
         label = torch.cat((label, torch.tensor([[len(bounds)]])), dim=0)
     else:
@@ -84,7 +87,7 @@ def classify(label):
     return label
 
 
-def load_images_and_labels(test=False, colab=False):
+def load_images_and_labels(test=False, colab=False, classes=16):
     '''
     Function for loading TIF images and corresponding shapefiles with population labels.
     '''
@@ -137,7 +140,7 @@ def load_images_and_labels(test=False, colab=False):
         index = shp['Index']
         geometry = shp['geometry']
         label = torch.tensor([index, label])
-        label = classify(label)
+        label = classify(label, classes=classes)
         geometry = [index, geometry]
         label_list.append(label)
         geo_list.append(geometry)
@@ -160,9 +163,10 @@ def normalize_fn(x, mean, std):
 
 class SatImageDataset(Dataset):
 
-    def __init__(self, test=False, colab=False, normalize=False, mean=None, std=None, flip=False, flip_prob=0.25):
+    def __init__(self, test=False, colab=False, normalize=False,
+                 mean=None, std=None, flip=False, flip_prob=0.25, classes=16):
         # data loading
-        self.x, self.y, self.geo = load_images_and_labels(test=test, colab=colab)
+        self.x, self.y, self.geo = load_images_and_labels(test=test, colab=colab, classes=classes)
         if normalize==True:
             normalize_fn(self.x, mean, std)
         self.n_images = len(self.x)

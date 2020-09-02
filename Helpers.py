@@ -86,7 +86,7 @@ def show_images(band, cmap, dataset, seed):
     plt.savefig("\content\drive\My Drive\Dissertation Files\Exported Figures\Example Images - Band {}".format(band), format="png")
     
 
-def load_datasets(flip=False, calculate_stats=False):
+def load_datasets(flip=False, calculate_stats=False, classes=16):
     """Runs functions to create normalized train and test datasets.
     Arguments:
         flip (bool, optional): activates random horizontal and vertical flips data augmentation for dataset.
@@ -99,7 +99,8 @@ def load_datasets(flip=False, calculate_stats=False):
     if calculate_stats:
         train_dataset_raw = SatImageDataset(test=False,
                                             colab=True,
-                                            flip=False)
+                                            flip=False,
+                                            classes=classes)
         clean_dataset(train_dataset_raw)
         sat_mean = calculate_mean(train_dataset_raw)
         sat_std = calculate_std(train_dataset_raw)
@@ -144,7 +145,8 @@ def load_datasets(flip=False, calculate_stats=False):
                                           normalize=True,
                                           mean=sat_mean,
                                           std=sat_std,
-                                          flip=flip)
+                                          flip=flip,
+                                          classes=classes)
     clean_dataset(train_dataset_model)
 
     print("""=============================================\
@@ -155,7 +157,8 @@ def load_datasets(flip=False, calculate_stats=False):
                                    colab=True,
                                    normalize=True,
                                    mean=sat_mean,
-                                   std=sat_std)
+                                   std=sat_std,
+                                   classes=classes)
     clean_dataset(test_dataset)
     print("""=============================================\
     \nTest Set Images: """ + str(test_dataset.n_images))
@@ -354,8 +357,9 @@ def population_hist(dataset, bins=10, figsize=(20,10)):
     bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
     return bins_list
 
-def class_hist(dataset, bins=range(0, 17), figsize=(20, 10)):
+def class_hist(dataset, figsize=(20, 10), classes=16):
     import matplotlib.ticker as ticker
+    bins = range(0, classes+1)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     class_list = []
     for i in range(0, len(dataset)):
@@ -363,12 +367,20 @@ def class_hist(dataset, bins=range(0, 17), figsize=(20, 10)):
         class_list.append(cl)
     bins_list = plt.hist(class_list, bins=bins)
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
-    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0, 17) + 0.5))
-    ax.xaxis.set_minor_formatter(
-        ticker.FixedFormatter([
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
-            '13', '14', '15'
-        ]))
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0, classes+1) + 0.5))
+    
+    if classes == 16:
+        ax.xaxis.set_minor_formatter(
+            ticker.FixedFormatter([
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+                '13', '14', '15'
+            ]))
+        
+    if classes == 9
+        ax.xaxis.set_minor_formatter(
+            ticker.FixedFormatter([
+                '0', '1', '2', '3', '4', '5', '6', '7', '8'
+            ]))
     return bins_list
 
 def population_hist(dataset, bins=10, figsize=(20,10)):
@@ -380,8 +392,9 @@ def population_hist(dataset, bins=10, figsize=(20,10)):
     bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
     return bins_list
 
-def balanced_class_hist(train_loader, bins=range(0, 17), figsize=(20, 10)):
+def balanced_class_hist(train_loader, figsize=(20, 10), classes=16):
     import matplotlib.ticker as ticker
+    bins=range(0, classes+1)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     cl_list = []
     iter_loader_test = iter(train_loader)
@@ -392,12 +405,19 @@ def balanced_class_hist(train_loader, bins=range(0, 17), figsize=(20, 10)):
             cl_list.append(cl)
     bins_list = plt.hist(cl_list, bins=bins)
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
-    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0, 17) + 0.5))
-    ax.xaxis.set_minor_formatter(
-        ticker.FixedFormatter([
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
-            '13', '14', '15'
-        ]))
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(np.arange(0, classes+1) + 0.5))
+    if classes == 16:
+        ax.xaxis.set_minor_formatter(
+            ticker.FixedFormatter([
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+                '13', '14', '15'
+            ]))
+    if classes == 9:
+        ax.xaxis.set_minor_formatter(
+            ticker.FixedFormatter([
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+                '13', '14', '15'
+            ]))
     plt.grid(which='major')
     return bins_list
 
@@ -418,15 +438,18 @@ def confusion_matrix(results):
     sn.heatmap(df_cm, cmap="Blues", annot=True,
               annot_kws={"size": 10})  # font size
     
-def shapefile_cl(results):
+def shapefile_cl(results, classes=16):
     import geopandas as gpd
     shapefile = gpd.read_file('/content/drive/My Drive/Dissertation Files/Export/Test Set New.gpkg')
     shapefile['Pred Class'] = -999
     for label in results:
         condition = shapefile['Index'] == label[0]
         shapefile.loc[condition, 'Pred Class'] = label[1]
-    bounds = [0, 2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2 **\
-          8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15]
+    if classes == 16:
+        bounds = [0, 2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2 **\
+              8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15]
+    if classes == 9:
+        bounds = [0, 1, 10, 100, 500, 1000, 5000, 10000, 20000]
     for c, bound in enumerate(bounds):
         condition = shapefile['Population'] >= bound
         shapefile.loc[condition, 'Pop Class'] = int(c)
@@ -438,9 +461,9 @@ def shapefile_cl(results):
     
     fig, ax = plt.subplots(ncols=2, figsize=(30, 12))
     shapefile.plot(column='Actual Class', cmap="Purples",
-                   ax=ax[0], legend=True, vmin=0, vmax=17)
+                   ax=ax[0], legend=True, vmin=0, vmax=classes)
     shapefile.plot(column='Pred Class', cmap="Purples",
-                   ax=ax[1], legend=True, vmin=0, vmax=17)
+                   ax=ax[1], legend=True, vmin=0, vmax=classes)
 
     ax[0].title.set_text('Actual Population')
     ax[1].title.set_text('Model Predicted Population')
@@ -452,9 +475,9 @@ def shapefile_cl(results):
     plt.title("Error in Predicted Population Values")
     
     fig, ax = plt.subplots(ncols=1, figsize=(10, 10))
-    sn.distplot(shapefile['Class Error'], kde=False, bins=range(0, 16))
+    sn.distplot(shapefile['Class Error'], kde=False, bins=range(0, classes))
     plt.title("Class Error Histogram")
-    ax.set_xticks(range(0, 16))
+    ax.set_xticks(range(0, classes))
     ax.set_xlabel("Magnitude of Class Error")
     ax.set_ylabel("Frequency")
     plt.show()
