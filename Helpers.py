@@ -323,8 +323,8 @@ def test_regression(model, dataset, num_images, device):
         with torch.no_grad():
             outputs = model(images)
         pred = int(outputs[0].item())
-        pop = labels[0][1].item()
-        index = labels[0][0].item()
+        pop = int(labels[0][1].item())
+        index = int(labels[0][0].item())
         pred_actual_list.append([index, pred, pop])
 
     indices = [item[0] for item in pred_actual_list]
@@ -403,15 +403,58 @@ def balanced_class_hist(train_loader, bins=range(0, 17), figsize=(20, 10)):
 
 def confusion_matrix(results):
     from sklearn.metrics import confusion_matrix
+    import pandas as pd
     data = confusion_matrix([item[2] for item in results], 
                           [item[1] for item in results],
-                          normalize='pred')
-    df_cm = pd.DataFrame(data, columns=np.unique(
-      [item[2] for item in results]),
-      index=np.unique([item[2] for item in results]))
+                          normalize='true')
+    i = max(np.unique([item[2] for item in results]).size,
+               np.unique([item[1] for item in results]).size)
+    df_cm = pd.DataFrame(data, columns=range(0,i),
+      index=range(0,i))
     df_cm.index.name = 'Actual'
     df_cm.columns.name = 'Predicted'
     plt.figure(figsize=(20, 10))
-    sns.set(font_scale=1.4)  # for label size
-    sns.heatmap(df_cm, cmap="Blues", annot=True,
+    sn.set(font_scale=1.4)  # for label size
+    sn.heatmap(df_cm, cmap="Blues", annot=True,
               annot_kws={"size": 10})  # font size
+    
+def shapefile_cl(results):
+    import geopandas as gpd
+    shapefile = gpd.read_file('/content/drive/My Drive/Dissertation Files/Export/Test Set New.gpkg')
+    shapefile['Pred Class'] = -999
+    for label in results:
+        condition = shapefile['Index'] == label[0]
+        shapefile.loc[condition, 'Pred Class'] = label[1]
+    bounds = [0, 2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2 **\
+          8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15]
+    for c, bound in enumerate(bounds):
+        condition = shapefile['Population'] >= bound
+        shapefile.loc[condition, 'Pop Class'] = int(c)
+    shapefile['Class Error'] = shapefile['Pred Class'] - shapefile['Pop Class']
+    shapefile['Actual Class'] = shapefile['Pop Class']
+    cols = ['Index', 'Population', 'Pred Class',
+            'Actual Class', 'Class Error', 'geometry']
+    shapefile = shapefile[cols]
+    
+    fig, ax = plt.subplots(ncols=2, figsize=(30, 12))
+    shapefile.plot(column='Actual Class', cmap="Purples",
+                   ax=ax[0], legend=True, vmin=0, vmax=17)
+    shapefile.plot(column='Pred Class', cmap="Purples",
+                   ax=ax[1], legend=True, vmin=0, vmax=17)
+
+    ax[0].title.set_text('Actual Population')
+    ax[1].title.set_text('Model Predicted Population')
+
+    
+    fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
+    shapefile.plot(column='Class Error', ax=ax, cmap="coolwarm",
+               legend=True, vmin=-6, vmax=6)
+    plt.title("Error in Predicted Population Values")
+    
+    fig, ax = plt.subplots(ncols=1, figsize=(10, 10))
+    sn.distplot(shapefile['Class Error'], kde=False, bins=range(0, 16))
+    plt.title("Class Error Histogram")
+    ax.set_xticks(range(0, 16))
+    ax.set_xlabel("Magnitude of Class Error")
+    ax.set_ylabel("Frequency")
+    plt.show()
