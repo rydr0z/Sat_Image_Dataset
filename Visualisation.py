@@ -86,9 +86,10 @@ def balanced_class_hist(train_loader, figsize=(20, 10), classes=16):
 
 
 def confusion_matrix(results):
+	from sklearn.metrics import confusion_matrix
     data = confusion_matrix([item[2] for item in results],
                             [item[1] for item in results],
-                            normalize='true')
+                            normalize=None)
     i = max(np.unique([item[2] for item in results]).size,
             np.unique([item[1] for item in results]).size)
     df_cm = pd.DataFrame(data, columns=range(0, i),

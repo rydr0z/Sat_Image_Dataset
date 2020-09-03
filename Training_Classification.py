@@ -22,7 +22,7 @@ def run_training(
         pbar=True,
         checkpoint=True,
         save_as="default",
-        weight_decay=1e-5,):
+        weight_decay=1e-5):
     """
     Runs training loops for max_epochs.
     Arguments:
@@ -69,7 +69,7 @@ def run_training(
     
     high = {}
     high["Val"] = 0
-    high["Epoch"] = 0
+    high["Accuracy"] = 0
     high["Model"] = 0
 
     # Use GPU if available
@@ -201,7 +201,7 @@ def run_training(
             low["Epoch"] = engine.state.epoch
             low["Model"] = model.state_dict()
             
-        if accuracy > high["Val"] or engine.state.epoch == 1:
+        if accuracy > high["Accuracy"] or engine.state.epoch == 1:
             high["Val"] = avg_bce
             high["Accuracy"] = accuracy
             high["Epoch"] = engine.state.epoch
@@ -256,10 +256,10 @@ def run_training(
 
     print("""\nLowest Validation Loss: {:.4f} at Epoch {} with {:.2f}% Accuracy
         \nBest model state_dict saved as /content/drive/My Drive/Dissertation Files/Models/{}
-        """.format(low["Val"], low["Epoch"], low["Accuracy"], model_name_best))
-    print("""\nHighest Validation Accuracy: {:.2f} at Epoch {} with {:.4f}% Loss
+        """.format(low["Val"], low["Epoch"], low["Accuracy"]*100, model_name_best))
+    print("""\nHighest Validation Accuracy: {:.2f}% at Epoch {} with {:.4f} Loss
         \nBest model state_dict saved as /content/drive/My Drive/Dissertation Files/Models/{}
-        """.format(high["Accuracy"], high["Epoch"], high["Val"], model_name_best2))
+        """.format(high["Accuracy"]*100, high["Epoch"], high["Val"], model_name_best2))
 
     return lists
 
