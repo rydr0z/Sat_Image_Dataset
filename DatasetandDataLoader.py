@@ -27,7 +27,11 @@ import os
 def random_crop_image(image, crp_h=33, crp_w=50):
     '''Return a randomly cropped image with dimensions
     [channels x crp_h x crp_w] given an image with dimensions
-    [channels x h x w] where h > crp_h and w > crp_w
+    [channels x h x w] where h > crp_h and w > crp_w.
+    Arguments:
+        image (tensor): image to be cropped
+        crp_h (int): height of cropped image
+        crp_w (int): widgth of cropped image
     '''
     shape = image.shape
     img_h, img_w = shape[1], shape[2]
@@ -57,6 +61,7 @@ def random_crop_image(image, crp_h=33, crp_w=50):
 
 
 def horizontal_flip(image):
+    '''Flips an image horizontally'''
     image = torch.flip(image, [1])
     return image
 
@@ -65,6 +70,7 @@ def horizontal_flip(image):
 
 
 def vertical_flip(image):
+    '''Flips an image vertically'''
     image = torch.flip(image, [2])
     return image
 
@@ -73,6 +79,15 @@ def vertical_flip(image):
 
 
 def classify(label, classes=6):
+    '''Create class labels from population labels
+    Arguments:
+        label - label to create a class for
+        classes - int, either 16 or 6 classes
+        16: bounds are 2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14
+        6: bounds are 1, 10, 100, 1000, 10000
+    Returns:
+        label with added dimension with class label
+    '''
     if classes == 16:
         bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
     if classes == 6:
@@ -88,8 +103,14 @@ def classify(label, classes=6):
 
 
 def load_images_and_labels(test=False, colab=False, classes=16):
-    '''
-    Function for loading TIF images and corresponding shapefiles with population labels.
+    '''Function for loading TIF images and corresponding shapefiles with population labels.
+    Arguments:
+        test - True for loading test set, False for loading training set
+        colab - True if loading from google colab storage
+        classes - 16 or 6 depending on desired classification bounds
+    Returns:
+        (image_list , label_list, geo_list)
+        
     '''
     
     if test==False:
@@ -153,6 +174,14 @@ def load_images_and_labels(test=False, colab=False, classes=16):
 
 
 def normalize_fn(x, mean, std):
+    '''Normalizes an image using channel means and channel standard deviations.
+    Changes are made in place.
+    Arguments:
+        x - image to be normalized
+        mean - calculated image mean by channel
+        std - caluclated image standard deviation by channel
+    '''
+     
     for i in range(0, len(x)):
         for channel in range(0,x[i].shape[0]):
             x[i][channel] = (x[i][channel] - mean[0][channel])/std[0][channel]

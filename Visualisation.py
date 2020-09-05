@@ -6,18 +6,42 @@ import torch
 import matplotlib.pyplot as plt
 import geopandas as gpd
 
+from matplotlib import rc
+import matplotlib.pylab as plt
 
-def population_hist(dataset, bins=10, figsize=(20, 10)):
-    fig, ax = plt.subplots(1, 1, figsize=figsize)
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
+
+SMALL_SIZE = 35
+MEDIUM_SIZE = 40
+BIGGER_SIZE = 50
+
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=BIGGER_SIZE, titleweight='bold')     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE, titleweight='bold')  # fontsize of the figure title
+
+def population_hist(dataset, bins=10, figsize=(25, 10)):
+    fig, axs = plt.subplots(1,2,figsize=figsize)
     pop_list = []
     for i in range(0, len(dataset)):
         pop = dataset[i][1][1].item()
         pop_list.append(pop)
-    bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
+    bins_list = axs[0].hist(pop_list, bins=bins)
+    axs[0].set_ylabel('Frequency')
+    axs[1].hist(pop_list, bins=bins)
+    axs[1].set_yscale('log')
+    axs[1].set_ylabel('Frequency (Log-Scaled)')
+    for ax in axs:
+      ax.set_xlabel('Population')
+    fig.suptitle('Population Histogram', fontsize=50, fontweight='bold')
     return bins_list
 
 
-def class_hist(dataset, figsize=(20, 10), classes=16):
+def class_hist(dataset, figsize=(10, 10), classes=16):
     import matplotlib.ticker as ticker
     bins = range(0, classes+1)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -43,17 +67,6 @@ def class_hist(dataset, figsize=(20, 10), classes=16):
                 '0', '1', '2', '3', '4', '5'
             ]))
     return bins_list
-
-
-def population_hist(dataset, bins=10, figsize=(20, 10)):
-    fig, ax = plt.subplots(1, 1, figsize=figsize)
-    pop_list = []
-    for i in range(0, len(dataset)):
-        pop = dataset[i][1][1].item()
-        pop_list.append(pop)
-    bins_list = sn.distplot(pop_list, bins=bins, kde=False, norm_hist=False)
-    return bins_list
-
 
 def balanced_class_hist(train_loader, figsize=(20, 10), classes=16):
     import matplotlib.ticker as ticker
@@ -86,10 +99,10 @@ def balanced_class_hist(train_loader, figsize=(20, 10), classes=16):
 
 
 def confusion_matrix(results):
-	from sklearn.metrics import confusion_matrix
+    from sklearn.metrics import confusion_matrix
     data = confusion_matrix([item[2] for item in results],
-                            [item[1] for item in results],
-                            normalize=None)
+                            [item[1] for item in results], 
+                            normalize='true')
     i = max(np.unique([item[2] for item in results]).size,
             np.unique([item[1] for item in results]).size)
     df_cm = pd.DataFrame(data, columns=range(0, i),
