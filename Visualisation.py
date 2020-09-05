@@ -12,17 +12,33 @@ import matplotlib.pylab as plt
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
-SMALL_SIZE = 35
-MEDIUM_SIZE = 40
-BIGGER_SIZE = 50
+def large_fonts():
+    SMALL_SIZE = 30
+    MEDIUM_SIZE = 40
+    BIGGER_SIZE = 50
 
-plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-plt.rc('axes', titlesize=BIGGER_SIZE, titleweight='bold')     # fontsize of the axes title
-plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=BIGGER_SIZE, titleweight='bold')  # fontsize of the figure title
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE, titleweight='bold')     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE, titleweight='bold')  # fontsize of the figure title
+
+def small_fonts():
+    SMALL_SIZE = 14
+    MEDIUM_SIZE = 16
+    BIGGER_SIZE = 22
+
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+large_fonts()
 
 def population_hist(dataset, bins=10, figsize=(25, 10)):
     fig, axs = plt.subplots(1,2,figsize=figsize)
@@ -49,7 +65,7 @@ def class_hist(dataset, figsize=(10, 10), classes=16):
     for i in range(0, len(dataset)):
         cl = dataset[i][1][2].item()
         class_list.append(cl)
-    bins_list = plt.hist(class_list, bins=bins)
+    bins_list = plt.hist(class_list, bins=bins, edgecolor='black', linewidth=1)
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
     ax.xaxis.set_minor_locator(
         ticker.FixedLocator(np.arange(0, classes+1) + 0.5))
@@ -115,9 +131,13 @@ def confusion_matrix(results):
                annot_kws={"size": 10})  # font size
 
 
-def shapefile_cl(results, classes=16):
-    shapefile = gpd.read_file(
-        '/content/drive/My Drive/Dissertation Files/Export/Test Set New.gpkg')
+def shapefile_cl(results, classes=16, test_region=1):
+    if test_region==1:
+        shapefile = gpd.read_file('/content/drive/My Drive/Dissertation Files/Export/Test Set New.gpkg')
+        fig, ax = plt.subplots(ncols=2, nrows=1, figsize=(30, 15))
+    else:
+        shapefile = gpd.read_file('/content/drive/My Drive/Dissertation Files/Export/Test Set 1.gpkg')
+        fig, ax = plt.subplots(ncols=1, nrows=2, figsize=(30, 15))
     shapefile['Pred Class'] = -999
     for label in results:
         condition = shapefile['Index'] == label[0]
@@ -136,24 +156,189 @@ def shapefile_cl(results, classes=16):
             'Actual Class', 'Class Error', 'geometry']
     shapefile = shapefile[cols]
 
-    fig, ax = plt.subplots(ncols=2, figsize=(30, 12))
-    shapefile.plot(column='Actual Class', cmap="Purples",
+    
+    shapefile.plot(column='Actual Class', cmap="Reds",
                    ax=ax[0], legend=True, vmin=0, vmax=classes)
-    shapefile.plot(column='Pred Class', cmap="Purples",
-                   ax=ax[1], legend=True, vmin=0, vmax=classes)
-
     ax[0].title.set_text('Actual Population')
+    shapefile.plot(column='Pred Class', cmap="Reds",
+                   ax=ax[1], legend=True, vmin=0, vmax=classes)
     ax[1].title.set_text('Model Predicted Population')
 
-    fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
+    if test_region==1:
+        fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
+    else:
+        fig, ax = plt.subplots(ncols=1, figsize=(20, 10))
     shapefile.plot(column='Class Error', ax=ax, cmap="coolwarm",
-                   legend=True, vmin=-6, vmax=6)
+                   legend=True, vmin=-10, vmax=10)
     plt.title("Error in Predicted Population Values")
 
-    fig, ax = plt.subplots(ncols=1, figsize=(10, 10))
+    fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
     sn.distplot(shapefile['Class Error'], kde=False, bins=range(0, classes))
     plt.title("Class Error Histogram")
     ax.set_xticks(range(0, classes))
     ax.set_xlabel("Magnitude of Class Error")
     ax.set_ylabel("Frequency")
     plt.show()
+    return shapefile
+
+def shapefile_reg(results):
+    shapefile = gpd.read_file(
+        '/content/drive/My Drive/Dissertation Files/Export/Test Set New.gpkg')
+    shapefile['Pred Population'] = -999
+    for label in results:
+        condition = shapefile['Index'] == label[0]
+        shapefile.loc[condition, 'Pred Population'] = label[1]
+    shapefile['Population Error'] = shapefile['Pred Population'] - shapefile['Population']
+    cols = ['Index', 'Population', 'Pred Population' 'Population Error', 'geometry']
+    shapefile = shapefile[cols]
+
+    fig, ax = plt.subplots(ncols=2, figsize=(30, 12))
+    shapefile.plot(column='Population', cmap="Purples",
+                  ax=ax[0], legend=True, vmin=0, vmax=shapefile['Population'].max())
+    shapefile.plot(column='Pred Population', cmap="Purples",
+                  ax=ax[1], legend=True, vmin=0, vmax=shapefile['Population'].max())
+
+    ax[0].title.set_text('Actual Population')
+    ax[1].title.set_text('Model Predicted Population')
+
+    fig, ax = plt.subplots(ncols=1, figsize=(30, 12))
+    shapefile.plot(column='Population Error', ax=ax,
+                  cmap="coolwarm", legend=True, vmin=-5000, vmax=5000)
+    plt.title("Error in Predicted Population Values")
+
+    fig, ax = plt.subplots(ncols=1, figsize=(16, 8))
+    sns.distplot(shapefile['Population Error'], kde=False)
+    plt.title("Population Error Error Histogram")
+    ax.set_xlabel("Population Error")
+    ax.set_ylabel("Frequency")
+    ax.set_yscale("Log")
+    plt.show()
+    return shapefile
+
+def display_layer_activations(layer, model, image_label_pair, device, sat_mean, sat_std):
+
+    from skimage import data, img_as_float
+    from skimage import exposure
+
+    net = model
+    net.to('cpu')
+
+    visualisation = {}
+
+    def hook_fn(m, i, o):
+      visualisation[m] = o 
+
+    def get_all_layers(net):
+      for name, layer in net._modules.items():
+        layer.to(device)
+        #If it is a sequential, don't register a hook on it
+        # but recursively register hook on all it's module children
+        if isinstance(layer, torch.nn.Sequential):
+          get_all_layers(layer)
+        else:
+          # it's a non sequential. Register a hook
+          layer.register_forward_hook(hook_fn)
+
+    get_all_layers(net)
+
+    images, labels = image_label_pair
+    images, labels = images.to('cpu'), labels.to('cpu')
+
+    vis_image = (images*sat_std)+sat_mean
+    band_cmaps = ['Blues', "Greens", "Reds", 'YlOrRd', 'YlOrRd', 'Greys', 'YlOrRd']
+    fig, axs = plt.subplots(1,8,figsize=(20, 10))
+    for i, ax in enumerate(axs.ravel()):
+      if i==0:
+        im = vis_image[0][0:3].permute(2, 1, 0)/3000
+        im = im.numpy()
+        im = img_as_float(im)
+        im = exposure.rescale_intensity(im, in_range='image', out_range=(0,1))
+        im = exposure.adjust_gamma(im, 0.4)
+        ax.imshow(im)
+        ax.set_title("RGB Bands")
+      else:
+        ax.imshow(vis_image[0].permute(2, 1, 0)[:, :, i-1], cmap=band_cmaps[i-1])
+        ax.set_title("Band {}".format(i))
+    fig.suptitle('Population: {}, Class: {}'.format(labels[0][1].item(), labels[0][2].item()), y=0.7)
+
+    images = images.float()
+
+    out = net.float().to('cpu')(images)
+
+    # Just to check whether we got all layers
+    print("Captured forward hooks for image.")      #output includes sequential layers
+
+    from torchvision import utils
+    keys_list = list(visualisation.keys())
+    print('Layer {}: {}'.format(layer, keys_list[layer]))
+    activation = visualisation[keys_list[layer]]
+    nrow = int(activation.shape[1]/8)
+    grid = utils.make_grid(activation[0], nrow=nrow, normalize=False, padding=0)
+    grid = grid.detach().numpy()
+
+    fig, axs = plt.subplots(8,nrow,figsize=(8,8))
+
+    for i, ax in enumerate(axs.ravel()):
+        ax.imshow(grid.transpose(2,1,0)[:,:,i], interpolation='none')
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_xticks([])
+        ax.set_yticks([])
+    layer_name = str(keys_list[layer]).split('(')[0]
+    fig.suptitle('Activations for layer {}: {} - {} '.format(layer, layer_name, activation.shape[1]))
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.ioff()
+    plt.show()
+
+def show_images(band, cmap, dataset, seed, sat_mean, sat_std):
+    """Shows 5 clipped satellite images.
+    Arguments:
+        band (int or list(int)): the bands to be displayed selected from 0,1,2,3,4,5,6,7
+        cmap (string): the colormap for the plot
+        dataset: SatImageDataset containing images
+        seed (int): select seed to display same images each time function executed
+    """
+
+    from skimage import data, img_as_float
+    from skimage import exposure
+    
+    torch.manual_seed(seed)
+    train_loader_for_vis = torch.utils.data.DataLoader(dataset,
+                                                   batch_size=1,
+                                                   shuffle=True)
+
+    vis_images = []
+    vis_labels = []
+
+    data_iter = iter(train_loader_for_vis)
+    for i in range(1,6):
+        vis_image, vis_label = data_iter.next()
+        vis_images.append(vis_image)
+        vis_labels.append(vis_label)
+
+    fig = plt.figure(figsize=(33, 50))
+    columns = 5
+    rows = 1
+
+    ax = []
+    plt.rcParams.update({'font.size': 18})
+    for i in range(1, columns * rows + 1):
+        image, label = vis_images[i-1], vis_labels[i-1]
+        image = (image*sat_std) + sat_mean
+        ax.append(fig.add_subplot(rows, columns, i))
+        ax[-1].set_title("Image {i}\nPopulation: {p}\nClass: {c}".format(i=i, p=str(label[:,1,:].item()), c=str(label[:,2,:].item())))
+        if band != 5:
+            plt.imshow(image[0].permute(2, 1, 0)[:, :, band], cmap=cmap, vmin=0, vmax=1)
+        if band == (0,1,2):
+            im = image[0][0:3].permute(2, 1, 0)/3000
+            im = im.numpy()
+            im = img_as_float(im)
+            im = exposure.adjust_gamma(im, 0.4)
+            plt.imshow(im)
+        else:
+            plt.imshow(image[0].permute(2, 1, 0)[:, :, band], cmap=cmap)
+    plt.show()
+    plt.rcParams.update({'font.size': 12})
+    plt.savefig("\content\drive\My Drive\Dissertation Files\Exported Figures\Example Images - Band {}".format(band), format="png")
+    
