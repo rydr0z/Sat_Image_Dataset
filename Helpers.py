@@ -161,7 +161,7 @@ def plot_results_reg(results_dict, figname="Figure"):
         figname (string): Top title for figure
         accuracy (bool): True if want to plot accuracy
     """                              
-    fig, axs = plt.subplots(1,3, figsize=(30,5))
+    fig, axs = plt.subplots(1,2, figsize=(30,5))
 
     plt.suptitle(figname, y=1.1)
     axs[0].plot(results_dict["Training Loss"], label="Training Loss")
@@ -180,11 +180,6 @@ def plot_results_reg(results_dict, figname="Figure"):
     axs[1].set_xlabel("Epoch")
     axs[1].set_ylabel("RMSE")
     axs[1].legend()
-
-    axs[2].plot(results_dict["Learning Rate"], label="Training Accuracy")
-    axs[2].set_title("Learning Rate over Training Epochs")
-    axs[2].set_xlabel("Epoch")
-    axs[2].set_ylabel("Learning Rate")
     plt.show()
 
     print("""Lowest Validation Loss: {:.4f} - Epoch: {}\nLowest RMSE: {:.4f} - Epoch {}""".format(
@@ -282,14 +277,16 @@ def test_regression(model, dataset, num_images, device):
 
     r_squared = r2_score(pop, preds)
     mae = mean_absolute_error(pop, preds)
-    mse = mean_squared_error(pop, preds)
+    rmse = mean_squared_error(pop, preds, squared=False)
     exp_var = explained_variance_score(pop, preds)
 
-    print("""Image Index: {}
-          \nModel Predictions: {}
-          \nActual Populations: {}
+    sum_pop = np.sum(np.array(pop))
+    sum_pred = np.sum(np.array(pred))
+
+    print("""Actual Total Population for Test Set Regions: {}
+    Predicted Total Population for Test Set Regions: {}
           \nMAE: {:.2f}
-          \nMSE: {:.2f}
+          \nRMSE: {:.2f}
           \nR^2: {:.4f}
-          \nExplained Variance: {:.4f}""".format(indices, preds, pop, mae, mse, r_squared, exp_var))
+          \nExplained Variance: {:.4f}""".format(sum_pop, sum_pred, mae, rmse, r_squared, exp_var))
     return pred_actual_list

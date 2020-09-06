@@ -64,8 +64,8 @@ def run_training(model,
 
     def process_function(engine, batch):
         # Determine whether dataset images flipped and probability
-        train_dataset_model.flip = flip
-        train_dataset_model.flip_prob = flip_prob
+        dataset.flip = flip
+        dataset.flip_prob = flip_prob
 
         # Main training loop
         model.train()
@@ -84,8 +84,8 @@ def run_training(model,
 
     def eval_function(engine, batch):
         # Reset flip - images should not be flipped for eval
-        train_dataset_model.flip = False
-        train_dataset_model.flip_prob = flip_prob
+        dataset.flip = False
+        dataset.flip_prob = flip_prob
 
         # Main eval loop
         model.to(device)
@@ -187,7 +187,7 @@ def run_training(model,
       
     
     # Run training loops until max_epochs reached
-    trainer.run(train_loader, max_epochs=max_epochs)
+    trainer.run(t_loader, max_epochs=max_epochs)
 
     # Save model with best validation loss
     model_name_best = save_as + '_LowestLossEpoch{}'.format(low['Epoch'])

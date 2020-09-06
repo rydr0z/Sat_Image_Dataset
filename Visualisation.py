@@ -250,10 +250,6 @@ def display_layer_activations(layer, model, image_label_pair, device, sat_mean, 
     for i, ax in enumerate(axs.ravel()):
       if i==0:
         im = vis_image[0][0:3].permute(2, 1, 0)/3000
-        im = im.numpy()
-        im = img_as_float(im)
-        im = exposure.rescale_intensity(im, in_range='image', out_range=(0,1))
-        im = exposure.adjust_gamma(im, 0.4)
         ax.imshow(im)
         ax.set_title("RGB Bands")
       else:
@@ -279,7 +275,7 @@ def display_layer_activations(layer, model, image_label_pair, device, sat_mean, 
     fig, axs = plt.subplots(8,nrow,figsize=(8,8))
 
     for i, ax in enumerate(axs.ravel()):
-        ax.imshow(grid.transpose(2,1,0)[:,:,i], interpolation='none')
+        ax.imshow(grid.transpose(2,1,0)[:,:,i], interpolation='none', cmap='viridis')
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         ax.set_xticks([])
@@ -334,7 +330,7 @@ def show_images(band, cmap, dataset, seed, sat_mean, sat_std):
             im = image[0][0:3].permute(2, 1, 0)/3000
             im = im.numpy()
             im = img_as_float(im)
-            im = exposure.adjust_gamma(im, 0.4)
+            im = exposure.adjust_gamma(im, 0.9)
             plt.imshow(im)
         else:
             plt.imshow(image[0].permute(2, 1, 0)[:, :, band], cmap=cmap)
