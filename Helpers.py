@@ -119,7 +119,7 @@ def plot_results_cl(results_dict, figname="Figure"):
         figname (string): Top title for figure
         accuracy (bool): True if want to plot accuracy
     """                               
-    fig, axs = plt.subplots(1,3, figsize=(30,5))
+    fig, axs = plt.subplots(1,2, figsize=(30,5))
 
     plt.suptitle(figname, y=1.1)
     axs[0].plot(results_dict["Training Loss"], label="Training Loss")
@@ -138,11 +138,6 @@ def plot_results_cl(results_dict, figname="Figure"):
     axs[1].set_xlabel("Epoch")
     axs[1].set_ylabel("Accuracy")
     axs[1].legend()
-
-    axs[2].plot(results_dict["Learning Rate"], label="Training Accuracy")
-    axs[2].set_title("Learning Rate over Training Epochs")
-    axs[2].set_xlabel("Epoch")
-    axs[2].set_ylabel("Learning Rate")
     plt.show()
     
 
@@ -281,7 +276,7 @@ def test_regression(model, dataset, num_images, device):
     exp_var = explained_variance_score(pop, preds)
 
     sum_pop = np.sum(np.array(pop))
-    sum_pred = np.sum(np.array(pred))
+    sum_pred = np.sum(np.array(preds))
 
     print("""Actual Total Population for Test Set Regions: {}
     Predicted Total Population for Test Set Regions: {}

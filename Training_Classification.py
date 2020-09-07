@@ -10,7 +10,6 @@ from ignite.handlers import ModelCheckpoint, Checkpoint
 def run_training(
         model,
         dataset,
-        default_loader,
         t_loader,
         v_loader,
         max_epochs=70,

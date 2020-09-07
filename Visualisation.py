@@ -12,11 +12,23 @@ import matplotlib.pylab as plt
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
-def large_fonts():
-    SMALL_SIZE = 30
-    MEDIUM_SIZE = 40
-    BIGGER_SIZE = 50
+def fonts(small, medium, large):
+  def large_fonts():
+    SMALL_SIZE = small
+    MEDIUM_SIZE = medium
+    BIGGER_SIZE = large
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE, titleweight='bold')     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE, titleweight='bold')  # fontsize of the figure title
 
+def large_fonts():
+    SMALL_SIZE = 20
+    MEDIUM_SIZE = 30
+    BIGGER_SIZE = 40
     plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
     plt.rc('axes', titlesize=BIGGER_SIZE, titleweight='bold')     # fontsize of the axes title
     plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -134,10 +146,10 @@ def confusion_matrix(results):
 def shapefile_cl(results, classes=16, test_region=1):
     if test_region==1:
         shapefile = gpd.read_file('/content/drive/My Drive/Dissertation Files/Export/Test Set New.gpkg')
-        fig, ax = plt.subplots(ncols=2, nrows=1, figsize=(30, 15))
+        fig, ax = plt.subplots(ncols=3, nrows=1, figsize=(32, 8))
     else:
         shapefile = gpd.read_file('/content/drive/My Drive/Dissertation Files/Export/Test Set 1.gpkg')
-        fig, ax = plt.subplots(ncols=1, nrows=2, figsize=(30, 15))
+        fig, ax = plt.subplots(ncols=1, nrows=3, figsize=(30, 15))
     shapefile['Pred Class'] = -999
     for label in results:
         condition = shapefile['Index'] == label[0]
@@ -156,21 +168,20 @@ def shapefile_cl(results, classes=16, test_region=1):
             'Actual Class', 'Class Error', 'geometry']
     shapefile = shapefile[cols]
 
-    
+    vmin=-10
+    vmax=10
+    if classes == 6:
+      vmin=-5
+      vmax= 5
     shapefile.plot(column='Actual Class', cmap="Reds",
                    ax=ax[0], legend=True, vmin=0, vmax=classes)
     ax[0].title.set_text('Actual Population')
     shapefile.plot(column='Pred Class', cmap="Reds",
                    ax=ax[1], legend=True, vmin=0, vmax=classes)
     ax[1].title.set_text('Model Predicted Population')
-
-    if test_region==1:
-        fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
-    else:
-        fig, ax = plt.subplots(ncols=1, figsize=(20, 10))
-    shapefile.plot(column='Class Error', ax=ax, cmap="coolwarm",
-                   legend=True, vmin=-10, vmax=10)
-    plt.title("Error in Predicted Population Values")
+    shapefile.plot(column='Class Error', ax=ax[2], cmap="coolwarm",
+                   legend=True, vmin=vmin, vmax=vmax)
+    ax[2].title.set_text("Prediction Error")
 
     fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
     sn.distplot(shapefile['Class Error'], kde=False, bins=range(0, classes))
@@ -189,25 +200,22 @@ def shapefile_reg(results):
         condition = shapefile['Index'] == label[0]
         shapefile.loc[condition, 'Pred Population'] = label[1]
     shapefile['Population Error'] = shapefile['Pred Population'] - shapefile['Population']
-    cols = ['Index', 'Population', 'Pred Population' 'Population Error', 'geometry']
+    cols = ['Index', 'Population', 'Pred Population', 'Population Error', 'geometry']
     shapefile = shapefile[cols]
 
-    fig, ax = plt.subplots(ncols=2, figsize=(30, 12))
+    fig, ax = plt.subplots(ncols=3, figsize=(32, 8))
     shapefile.plot(column='Population', cmap="Purples",
                   ax=ax[0], legend=True, vmin=0, vmax=shapefile['Population'].max())
     shapefile.plot(column='Pred Population', cmap="Purples",
                   ax=ax[1], legend=True, vmin=0, vmax=shapefile['Population'].max())
-
     ax[0].title.set_text('Actual Population')
     ax[1].title.set_text('Model Predicted Population')
-
-    fig, ax = plt.subplots(ncols=1, figsize=(30, 12))
-    shapefile.plot(column='Population Error', ax=ax,
-                  cmap="coolwarm", legend=True, vmin=-5000, vmax=5000)
-    plt.title("Error in Predicted Population Values")
+    shapefile.plot(column='Population Error', ax=ax[2],
+                  cmap="coolwarm", legend=True, vmin=-2000, vmax=2000)
+    ax[2].title.set_text("Error in Predicted Population Values")
 
     fig, ax = plt.subplots(ncols=1, figsize=(16, 8))
-    sns.distplot(shapefile['Population Error'], kde=False)
+    sn.distplot(shapefile['Population Error'], kde=False)
     plt.title("Population Error Error Histogram")
     ax.set_xlabel("Population Error")
     ax.set_ylabel("Frequency")
