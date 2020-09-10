@@ -245,12 +245,6 @@ def run_training(
     torch.save({'model': low['Model']},
                '/content/drive/My Drive/Dissertation Files/Models/' +
                model_name_best)
-    
-    # Save model with best validation accuracy
-    model_name_best2 = save_as + '_HighestAccuracyEpoch{}'.format(low['Epoch'])
-    torch.save({'model': high['Model']},
-               '/content/drive/My Drive/Dissertation Files/Models/' +
-               model_name_best2)
 
     # Save model at end of max_epochs
     model_name_last = save_as + '_FinalEpoch{}'.format(max_epochs)
@@ -261,9 +255,10 @@ def run_training(
     print('''\nLowest Validation Loss: {:.4f} at Epoch {} with {:.2f}% Accuracy
         \nBest model state_dict saved as /content/drive/My Drive/Dissertation Files/Models/{}
         '''.format(low['Val'], low['Epoch'], low['Accuracy']*100, model_name_best))
-    print('''\nHighest Validation Accuracy: {:.2f}% at Epoch {} with {:.4f} Loss
-        \nBest model state_dict saved as /content/drive/My Drive/Dissertation Files/Models/{}
-        '''.format(high['Accuracy']*100, high['Epoch'], high['Val'], model_name_best2))
+
+    print('Using model with Lowest Validation Loss')
+    
+    model.load_state_dict(low['Model'])
 
     return lists
 
@@ -275,6 +270,10 @@ def test_classification(model, dataset, num_images, device, rgb=False):
                                          batch_size=1,
                                          shuffle=False)
     iter_loader = iter(loader)
+    
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.manual_seed(0)
     model.to(device)
     for i in range(0, num_images):
         images, labels = iter_loader.next()
@@ -284,6 +283,7 @@ def test_classification(model, dataset, num_images, device, rgb=False):
         images = images.to(device)
         labels = labels.to(device)
         model.eval()
+        model.zero_grad()
         with torch.no_grad():
             outputs = model(images)
             pred_val1, pred_lab1 = torch.max(outputs, dim=1)
@@ -294,32 +294,33 @@ def test_classification(model, dataset, num_images, device, rgb=False):
             pred = int(pred_lab1.item())
             pred2 = int(pred_lab2.item())
             pred3 = int(pred_lab3.item())
-        pop = labels[0][2].item()
-        index = labels[0][0].item()
-        pred_actual_list.append([index, pred, pop, pred2, pred3])
+            pop = labels[0][2].item()
+            index = labels[0][0].item()
+            pred_actual_list.append([index, pred, pop, pred2, pred3])
 
-    indices = [item[0] for item in pred_actual_list]
-    preds = [item[1] for item in pred_actual_list]
-    pop = [item[2] for item in pred_actual_list]
-    preds2 = [item[3] for item in pred_actual_list]
-    preds3 = [item[4] for item in pred_actual_list]
+    with torch.no_grad():
+        indices = [item[0] for item in pred_actual_list]
+        preds = [item[1] for item in pred_actual_list]
+        pop = [item[2] for item in pred_actual_list]
+        preds2 = [item[3] for item in pred_actual_list]
+        preds3 = [item[4] for item in pred_actual_list]
 
-    pop_np = np.array(pop)
-    preds_np = np.array(preds)
-    preds2_np = np.array(preds2)
-    preds3_np = np.array(preds3)
+        pop_np = np.array(pop)
+        preds_np = np.array(preds)
+        preds2_np = np.array(preds2)
+        preds3_np = np.array(preds3)
 
-    #
-    accuracy = ((preds_np == pop_np).sum() / preds_np.size) * 100
-    accuracy2 = (np.logical_or((preds_np == pop_np),
-                               (preds2_np == pop_np))).sum() / preds2_np.size * 100
-    accuracy3 = (np.logical_or(np.logical_or((preds_np == pop_np),
-                                             (preds2_np == pop_np)), (preds3_np == pop_np))).sum() / preds3_np.size * 100
+        #
+        accuracy = ((preds_np == pop_np).sum() / preds_np.size) * 100
+        accuracy2 = (np.logical_or((preds_np == pop_np),
+                                  (preds2_np == pop_np))).sum() / preds2_np.size * 100
+        accuracy3 = (np.logical_or(np.logical_or((preds_np == pop_np),
+                                                (preds2_np == pop_np)), (preds3_np == pop_np))).sum() / preds3_np.size * 100
 
-    cl_report = classification_report(pop, preds)
-    accuracy_sc = accuracy_score(pop, preds) * 100
-    bal_accuracy = balanced_accuracy_score(pop, preds) * 100
-    f1_score = f1_score(pop, preds, average='weighted')
+        cl_report = classification_report(pop, preds)
+        accuracy_sc = accuracy_score(pop, preds) * 100
+        bal_accuracy = balanced_accuracy_score(pop, preds) * 100
+        f1_score = f1_score(pop, preds, average='weighted')
 
     print('''Overall Accuracy (Top 1, Top 2, Top 3): {:2f}%, {:2f}%, {:2f}%
     \nAccuracy: {:.2f}%
@@ -329,3 +330,35 @@ def test_classification(model, dataset, num_images, device, rgb=False):
     \n{}'''.format(accuracy, accuracy2, accuracy3,accuracy_sc, bal_accuracy, f1_score,  cl_report)
     )
     return pred_actual_list
+
+# Function to find weights without using Imbalanced Dataset Sampler
+def make_weights_for_balanced_classes(dataset, nclasses):
+    """Function to find weights for dataset classes
+    Arguments:
+      dataset - SatImageDataset to find weights for
+      nclasses - number of classes for classification problem
+      
+    Returns:
+      weight - list with a weight for each point in the dataset determined by
+               its class
+      weight_per_class - list with one weight for each class"""
+    count = [0] * nclasses
+    cl_list = []
+    print(count)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+    iter_loader_test = iter(loader)
+    for i in range(0, len(loader)):
+        image, label = iter_loader_test.next()
+        cl = int(label[0][2].item())
+        count[cl] += 1
+        cl_list.append(cl)
+    print(count)
+    print(cl_list)
+    weight_per_class = [0.] * nclasses
+    N = float(sum(count))
+    for i in range(nclasses):
+        weight_per_class[i] = N / float(count[i])
+    weight = [0] * len(dataset)
+    for i in range(0, len(loader)):
+        weight[i] = weight_per_class[cl_list[i]]
+    return weight, weight_per_class

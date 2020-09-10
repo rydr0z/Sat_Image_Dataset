@@ -183,66 +183,6 @@ def plot_results_reg(results_dict, figname="Figure"):
         min(results_dict["Validation RMSE"]),
         results_dict["Validation RMSE"].index(min(results_dict["Validation RMSE"])))
          )
-            
-def test_classification(model, dataset, num_images, device):
-    from sklearn.metrics import classification_report
-    pred_actual_list = []
-    loader = torch.utils.data.DataLoader(dataset,
-                                         batch_size=1,
-                                         shuffle=False)
-    iter_loader = iter(loader)
-    model.to(device)
-    for i in range(0, num_images):
-        images, labels = iter_loader.next()
-        images = images.float()
-        images = images.to(device)
-        labels = labels.to(device)
-        model.eval()
-        with torch.no_grad():
-            outputs = model(images)
-        pred_val1, pred_lab1 = torch.max(outputs, dim=1)
-        pred_val2, pred_lab2 = torch.max(outputs[outputs != pred_val1], dim=0)
-        outputs1 = outputs[outputs != pred_val1]
-        pred_val3, pred_lab3 = torch.max(
-            outputs1[outputs1 != pred_val2], dim=0)
-        pred = int(pred_lab1.item())
-        pred2 = int(pred_lab2.item())
-        pred3 = int(pred_lab3.item())
-        pop = labels[0][2].item()
-        index = labels[0][0].item()
-        pred_actual_list.append([index, pred, pop, pred2, pred3])
-
-    indices = [item[0] for item in pred_actual_list]
-    preds = [item[1] for item in pred_actual_list]
-    pop = [item[2] for item in pred_actual_list]
-    preds2 = [item[3] for item in pred_actual_list]
-    preds3 = [item[4] for item in pred_actual_list]
-
-    pop_np = np.array(pop)
-    preds_np = np.array(preds)
-    preds2_np = np.array(preds2)
-    preds3_np = np.array(preds3)
-
-    #
-    accuracy = ((preds_np == pop_np).sum() / preds_np.size) * 100
-    accuracy2 = (np.logical_or((preds_np == pop_np),
-                               (preds2_np == pop_np))).sum() / preds2_np.size * 100
-    accuracy3 = (np.logical_or(np.logical_or((preds_np == pop_np),
-                                             (preds2_np == pop_np)), (preds3_np == pop_np))).sum() / preds3_np.size * 100
-
-    cl_report = classification_report(pop, preds)
-
-    print("""Image Index: {}
-    \nModel Predictions: {}
-    \nActual Populations: {}
-    \nOverall Accuracy (Top 1): {:2f}%
-    \nOverall Accuracy (Top 2): {:2f}%
-    \nOverall Accuracy (Top 3): {:2f}%
-    \n
-    \n{}""".format(
-        indices, preds, pop, accuracy, accuracy2, accuracy3, cl_report)
-    )
-    return pred_actual_list
 
 def test_regression(model, dataset, num_images, device):
     from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, \
