@@ -217,11 +217,78 @@ def test_regression(model, dataset, num_images, device):
 
     sum_pop = np.sum(np.array(pop))
     sum_pred = np.sum(np.array(preds))
+    mean_pop = np.mean(np.array(pop))
+    mean_pred = np.mean(np.array(preds))
+    percent_mae = (mae / mean_pop) * 100
 
-    print("""Actual Total Population for Test Set Regions: {}
-    Predicted Total Population for Test Set Regions: {}
+    print("""Actual Total Population for Region: {}
+          \nPredicted Total Population for Region: {}
+          \nActual Mean Population for Region: {}
+          \nPredicted Mean Population for Region: {}
           \nMAE: {:.2f}
+          \n%MAE: {:.2f}
           \nRMSE: {:.2f}
           \nR^2: {:.4f}
-          \nExplained Variance: {:.4f}""".format(sum_pop, sum_pred, mae, rmse, r_squared, exp_var))
+          \nExplained Variance: {:.4f}""".format(sum_pop, sum_pred, mean_pop, mean_pred,
+          mae, percent_mae, rmse, r_squared, exp_var))
     return pred_actual_list
+
+def classes_to_population(results, dataset, classes=16):
+    from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, \
+    explained_variance_score
+
+    preds = [item[1] for item in results]
+    pop = []
+
+    loader = torch.utils.data.DataLoader(dataset,
+                                         batch_size=1,
+                                         shuffle=False)
+    iter_loader = iter(loader)
+    for i in range(0, len(loader)):
+        _, labels = iter_loader.next()
+        pop_item = int(labels[0][1].item())
+        pop.append(pop_item)
+
+    new_preds = []
+
+    if classes == 16:
+        bounds = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14]
+    if classes == 6:
+        bounds = [1, 10, 100, 1000, 10000]
+
+    for pred in preds:
+        if pred == 0:
+          new_preds.append(0)
+        elif pred == len(bounds):
+          new_preds.append(bounds[-1])
+        else:
+          midpoint = bounds[pred-1] + bounds[pred]
+          midpoint /= 2
+          new_preds.append(midpoint)
+
+    r_squared = r2_score(pop, new_preds)
+    mae = mean_absolute_error(pop, new_preds)
+    rmse = mean_squared_error(pop, new_preds, squared=False)
+    exp_var = explained_variance_score(pop, new_preds)
+
+    sum_pop = np.sum(np.array(pop))
+    sum_pred = np.sum(np.array(new_preds))
+    mean_pop = np.mean(np.array(pop))
+    mean_pred = np.mean(np.array(new_preds))
+    percent_mae = (mae / mean_pop) * 100
+
+    print("""Actual Total Population for Region: {}
+          \nPredicted Total Population for Region: {}
+          \nActual Mean Population for Region: {}
+          \nPredicted Mean Population for Region: {}
+          \nMAE: {:.2f}
+          \n%MAE: {:.2f}
+          \nRMSE: {:.2f}
+          \nR^2: {:.4f}
+          \nExplained Variance: {:.4f}""".format(sum_pop, sum_pred, mean_pop, mean_pred,
+          mae, percent_mae, rmse, r_squared, exp_var))
+    
+    return new_preds
+    
+
+    
