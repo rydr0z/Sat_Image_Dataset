@@ -7,22 +7,43 @@ from ignite.contrib.handlers import ProgressBar
 from ignite.handlers import ModelCheckpoint, Checkpoint
 
 
-def run_training(model,
-                 dataset,
-                 t_loader,
-                 v_loader,
-                 max_epochs,
-                 criterion=torch.nn.SmoothL1Loss(),
-                 flip=False,
-                 flip_prob=0, 
-                 initial_lr=0.001,
-                 lr_sched=None,
-                 optim=None,
-                 pbar=True,
-                 checkpoint=True,
-                 save_as="default",
-                 weight_decay=1e-5,
-                 ):
+def run_training(
+        model,
+        dataset,
+        t_loader,
+        v_loader,
+        max_epochs,
+        criterion=torch.nn.SmoothL1Loss(),
+        flip=False,
+        flip_prob=0,
+        initial_lr=0.001,
+        lr_sched=None,
+        optim=None,
+        pbar=True,
+        checkpoint=True,
+        save_as="default",
+        weight_decay=1e-5,):
+    """Runs training loops for neural network
+    Arguments:
+        model - Neural Network that will be trained
+        dataset - SatImageDataset containing images and labels
+        t_loader - DataLoader for training data
+        v_loader - DataLoader for validation data
+        max_epochs - int, maximum number of epochs for training
+        criterion - nn.Module with desired loss function
+        flip - True for random horizontal and vertical flips
+        flip_prob -  Sets probability for random flips (vertical and horizontal)
+        initial_lr - starting learning rate for optimizer
+        lr_sched - optional if using saved lr_scheduler
+        optim - optional if using saved optimizer
+        pbar - True displays the progress bar for each epoch
+        checkpoint - True to save the file to Google Drive each epoch
+        save_as - file_name for saving
+        weight_decay - weight decay factor for optimizer
+        
+    Returns:
+        lists: dictionary with Training Loss, Validation Loss, Learning Rates
+    """
     # Set seed for pseudo-random numbers
     seed = 121
     np.random.seed = seed
@@ -127,7 +148,7 @@ def run_training(model,
         train_evaluator.run(t_loader)
         metrics = train_evaluator.state.metrics
         avg_bce = metrics['bce']
-        rmse = metrics ['rmse']
+        rmse = metrics['rmse']
         lists["Training Loss"].append(avg_bce)
         lists["Training RMSE"].append(rmse)
         lists["Learning Rate"].append(optimizer.param_groups[0]['lr'])
@@ -149,7 +170,7 @@ def run_training(model,
         validation_evaluator.run(v_loader)
         metrics = validation_evaluator.state.metrics
         avg_bce = metrics['bce']
-        rmse = metrics ['rmse']
+        rmse = metrics['rmse']
         lists["Validation Loss"].append(avg_bce)
         lists["Validation RMSE"].append(rmse)
 
@@ -171,21 +192,20 @@ def run_training(model,
 
     # Create checkpoint with model, optim and lr_sched
     if checkpoint:
-      checkpointer = ModelCheckpoint(
-          '/content/drive/My Drive/Dissertation Files/Models',
-          'model' + save_as,
-          n_saved=1,
-          create_dir=True,
-          save_as_state_dict=True,
-          require_empty=False)
-      trainer.add_event_handler(
-          Events.EPOCH_COMPLETED, checkpointer, {
-              save_as: model,
-              save_as + "optim": optimizer,
-              save_as + "lr_sched": lr_scheduler
-          })
-      
-    
+        checkpointer = ModelCheckpoint(
+            '/content/drive/My Drive/Dissertation Files/Models',
+            'model' + save_as,
+            n_saved=1,
+            create_dir=True,
+            save_as_state_dict=True,
+            require_empty=False)
+        trainer.add_event_handler(
+            Events.EPOCH_COMPLETED, checkpointer, {
+                save_as: model,
+                save_as + "optim": optimizer,
+                save_as + "lr_sched": lr_scheduler
+            })
+
     # Run training loops until max_epochs reached
     trainer.run(t_loader, max_epochs=max_epochs)
 
@@ -194,7 +214,7 @@ def run_training(model,
     torch.save({'model': low['Model']},
                '/content/drive/My Drive/Dissertation Files/Models/' +
                model_name_best)
-    
+
     # Save model at end of max_epochs
     model_name_last = save_as + '_FinalEpoch{}'.format(max_epochs)
     torch.save({'model': model.state_dict()},

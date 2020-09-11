@@ -7,22 +7,21 @@ from ignite.contrib.handlers import ProgressBar
 from ignite.handlers import ModelCheckpoint, Checkpoint
 
 
-def run_training(
-        model,
-        dataset,
-        t_loader,
-        v_loader,
-        max_epochs=70,
-        flip=False,
-        flip_prob=0,
-        initial_lr=0.001,
-        lr_sched=None,
-        optim=None,
-        pbar=True,
-        checkpoint=True,
-        save_as='default',
-        weight_decay=1e-5,
-        rgb=False):
+def run_training(model,
+                 dataset,
+                 t_loader,
+                 v_loader,
+                 max_epochs=70,
+                 flip=False,
+                 flip_prob=0,
+                 initial_lr=0.001,
+                 lr_sched=None,
+                 optim=None,
+                 pbar=True,
+                 checkpoint=True,
+                 save_as='default',
+                 weight_decay=1e-5,
+                 rgb=False):
     '''
     Runs training loops for max_epochs.
     Arguments:
@@ -66,7 +65,7 @@ def run_training(
     low['Val'] = 0
     low['Epoch'] = 0
     low['Model'] = 0
-    
+
     high = {}
     high['Val'] = 0
     high['Accuracy'] = 0
@@ -104,7 +103,7 @@ def run_training(
         optimizer.zero_grad()
         x, y = batch
         if rgb:
-            x = x[:,0:3,:,:]
+            x = x[:, 0:3, :, :]
         x = x.float()
         y = y.type(torch.LongTensor)
         y = y[:, 2, :].squeeze()
@@ -132,7 +131,7 @@ def run_training(
         with torch.no_grad():
             x, y = batch
             if rgb:
-                x = x[:,0:3,:,:]
+                x = x[:, 0:3, :, :]
             x = x.float()
             y = y.type(torch.LongTensor)
             y = y[:, 2, :].squeeze()
@@ -158,12 +157,12 @@ def run_training(
     Accuracy().attach(validation_evaluator, 'accuracy')
     Fbeta(0.5, True).attach(train_evaluator, 'Fbeta')
     Fbeta(0.5, True).attach(validation_evaluator, 'Fbeta')
-    
+
     # Prints progress bar if pbar=True
     if pbar:
         pbar = ProgressBar(persist=True, bar_format='')
         pbar.attach(trainer, ['loss'])
-    
+
     @trainer.on(Events.EPOCH_COMPLETED)
     def log_training_results(engine):
         # Run train evaluator on training dataset and log results
@@ -204,7 +203,7 @@ def run_training(
             low['Accuracy'] = accuracy
             low['Epoch'] = engine.state.epoch
             low['Model'] = model.state_dict()
-            
+
         if accuracy > high['Accuracy'] or engine.state.epoch == 1:
             high['Val'] = avg_bce
             high['Accuracy'] = accuracy
@@ -254,23 +253,23 @@ def run_training(
 
     print('''\nLowest Validation Loss: {:.4f} at Epoch {} with {:.2f}% Accuracy
         \nBest model state_dict saved as /content/drive/My Drive/Dissertation Files/Models/{}
-        '''.format(low['Val'], low['Epoch'], low['Accuracy']*100, model_name_best))
+        '''.format(low['Val'], low['Epoch'], low['Accuracy'] * 100,
+                   model_name_best))
 
     print('Using model with Lowest Validation Loss')
-    
+
     model.load_state_dict(low['Model'])
 
     return lists
+
 
 def test_classification(model, dataset, num_images, device, rgb=False):
     from sklearn.metrics import classification_report, accuracy_score, \
         balanced_accuracy_score, f1_score, plot_confusion_matrix
     pred_actual_list = []
-    loader = torch.utils.data.DataLoader(dataset,
-                                         batch_size=1,
-                                         shuffle=False)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
     iter_loader = iter(loader)
-    
+
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.manual_seed(0)
@@ -278,7 +277,7 @@ def test_classification(model, dataset, num_images, device, rgb=False):
     for i in range(0, num_images):
         images, labels = iter_loader.next()
         if rgb:
-            images = images[:,0:3,:,:]
+            images = images[:, 0:3, :, :]
         images = images.float()
         images = images.to(device)
         labels = labels.to(device)
@@ -287,10 +286,11 @@ def test_classification(model, dataset, num_images, device, rgb=False):
         with torch.no_grad():
             outputs = model(images)
             pred_val1, pred_lab1 = torch.max(outputs, dim=1)
-            pred_val2, pred_lab2 = torch.max(outputs[outputs != pred_val1], dim=0)
+            pred_val2, pred_lab2 = torch.max(outputs[outputs != pred_val1],
+                                             dim=0)
             outputs1 = outputs[outputs != pred_val1]
-            pred_val3, pred_lab3 = torch.max(
-                outputs1[outputs1 != pred_val2], dim=0)
+            pred_val3, pred_lab3 = torch.max(outputs1[outputs1 != pred_val2],
+                                             dim=0)
             pred = int(pred_lab1.item())
             pred2 = int(pred_lab2.item())
             pred3 = int(pred_lab3.item())
@@ -312,10 +312,12 @@ def test_classification(model, dataset, num_images, device, rgb=False):
 
         #
         accuracy = ((preds_np == pop_np).sum() / preds_np.size) * 100
-        accuracy2 = (np.logical_or((preds_np == pop_np),
-                                  (preds2_np == pop_np))).sum() / preds2_np.size * 100
-        accuracy3 = (np.logical_or(np.logical_or((preds_np == pop_np),
-                                                (preds2_np == pop_np)), (preds3_np == pop_np))).sum() / preds3_np.size * 100
+        accuracy2 = (np.logical_or(
+            (preds_np == pop_np),
+            (preds2_np == pop_np))).sum() / preds2_np.size * 100
+        accuracy3 = (np.logical_or(
+            np.logical_or((preds_np == pop_np), (preds2_np == pop_np)),
+            (preds3_np == pop_np))).sum() / preds3_np.size * 100
 
         cl_report = classification_report(pop, preds)
         accuracy_sc = accuracy_score(pop, preds) * 100
@@ -327,9 +329,10 @@ def test_classification(model, dataset, num_images, device, rgb=False):
     \nBalanced Accuracy: {:.2f}%
     \nF1 Score: {:.2f}
     \n
-    \n{}'''.format(accuracy, accuracy2, accuracy3,accuracy_sc, bal_accuracy, f1_score,  cl_report)
-    )
+    \n{}'''.format(accuracy, accuracy2, accuracy3, accuracy_sc, bal_accuracy,
+                   f1_score, cl_report))
     return pred_actual_list
+
 
 # Function to find weights without using Imbalanced Dataset Sampler
 def make_weights_for_balanced_classes(dataset, nclasses):
