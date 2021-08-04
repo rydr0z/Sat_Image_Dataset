@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
 import pandas as pd
-import seaborn as sn
+import seaborn as sns
 import torch
 import matplotlib.pyplot as plt
 import geopandas as gpd
@@ -9,89 +9,33 @@ import geopandas as gpd
 from matplotlib import rc
 import matplotlib.pylab as plt
 
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
-
-
-def fonts(small, medium, large):
-    """function for setting font sizes as desired"""
-    SMALL_SIZE = small
-    MEDIUM_SIZE = medium
-    BIGGER_SIZE = large
-    plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
-    plt.rc('axes', titlesize=BIGGER_SIZE,
-           titleweight='bold')  # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
-    plt.rc('figure', titlesize=BIGGER_SIZE,
-           titleweight='bold')  # fontsize of the figure title
-
-
-def large_fonts():
-    """function for setting large font sizes"""
-    SMALL_SIZE = 20
-    MEDIUM_SIZE = 30
-    BIGGER_SIZE = 40
-    plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
-    plt.rc('axes', titlesize=BIGGER_SIZE,
-           titleweight='bold')  # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
-    plt.rc('figure', titlesize=BIGGER_SIZE,
-           titleweight='bold')  # fontsize of the figure title
-
-
-def small_fonts():
-    """function for setting small font sizes"""
-    SMALL_SIZE = 14
-    MEDIUM_SIZE = 16
-    BIGGER_SIZE = 22
-
-    plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
-    plt.rc('axes', titlesize=BIGGER_SIZE)  # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
-    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-
-
-# Use large fonts by default
-large_fonts()
-
-
 def population_hist(dataset, bins=10, figsize=(25, 10)):
     """Creates a population hist for dataset"""
+    sns.set_context("talk")
     fig, axs = plt.subplots(1, 2, figsize=figsize)
     pop_list = []
+    class_list = []
     for i in range(0, len(dataset)):
-        pop = dataset[i][1][1].item()
+        pop = dataset.y[i][1].item()
         pop_list.append(pop)
-    bins_list = axs[0].hist(pop_list, bins=bins)
-    axs[0].set_ylabel('Frequency')
-    axs[1].hist(pop_list, bins=bins)
-    axs[1].set_yscale('log')
-    axs[1].set_ylabel('Frequency (Log-Scaled)')
-    for ax in axs:
-        ax.set_xlabel('Population')
+    axs[0] = sns.histplot(pop_list, bins=bins, ax=axs[0])
+    axs[1] = sns.histplot(pop_list, bins=bins, ax=axs[1])
+    axs[0].set(ylabel='Frequency', xlabel='Population')
+    axs[1].set(yscale='log', ylabel='Frequency (Log-Scaled)', xlabel='Population')
     fig.suptitle('Population Histogram', fontsize=50, fontweight='bold')
-    return bins_list
 
 
 def class_hist(dataset, figsize=(10, 10), classes=16):
     """Creates a class hist for dataset"""
     import matplotlib.ticker as ticker
+    sns.set_context("talk")
     bins = range(0, classes + 1)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     class_list = []
     for i in range(0, len(dataset)):
         cl = dataset[i][1][2].item()
         class_list.append(cl)
-    bins_list = plt.hist(class_list, bins=bins, edgecolor='black', linewidth=1)
+    sns.histplot(class_list, bins=bins, edgecolor='black', linewidth=1)
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
     ax.xaxis.set_minor_locator(
         ticker.FixedLocator(np.arange(0, classes + 1) + 0.5))
@@ -106,7 +50,6 @@ def class_hist(dataset, figsize=(10, 10), classes=16):
     if classes == 6:
         ax.xaxis.set_minor_formatter(
             ticker.FixedFormatter(['0', '1', '2', '3', '4', '5']))
-    return bins_list
 
 
 def balanced_class_hist(train_loader, figsize=(20, 10), classes=16):
@@ -151,8 +94,8 @@ def confusion_matrix(results):
     df_cm.index.name = 'Actual'
     df_cm.columns.name = 'Predicted'
     plt.figure(figsize=(20, 10))
-    sn.set(font_scale=1.4)
-    sn.heatmap(df_cm, cmap="Blues", annot=True, annot_kws={"size": 10})
+    sns.set(font_scale=1.4)
+    sns.heatmap(df_cm, cmap="Blues", annot=True, annot_kws={"size": 10})
 
 
 def shapefile_cl(results, classes=16, test_region=1):
@@ -218,7 +161,7 @@ def shapefile_cl(results, classes=16, test_region=1):
     ax[2].title.set_text("Prediction Error")
 
     fig, ax = plt.subplots(ncols=1, figsize=(15, 10))
-    sn.distplot(shapefile['Class Error'], kde=False, bins=range(0, classes))
+    sns.distplot(shapefile['Class Error'], kde=False, bins=range(0, classes))
     plt.title("Class Error Histogram")
     ax.set_xticks(range(0, classes))
     ax.set_xlabel("Magnitude of Class Error")
@@ -268,7 +211,7 @@ def shapefile_reg(results):
     ax[2].title.set_text("Error in Predicted Population Values")
 
     fig, ax = plt.subplots(ncols=1, figsize=(16, 8))
-    sn.distplot(shapefile['Population Error'], kde=False)
+    sns.distplot(shapefile['Population Error'], kde=False)
     plt.title("Population Error Error Histogram")
     ax.set_xlabel("Population Error")
     ax.set_ylabel("Frequency")
