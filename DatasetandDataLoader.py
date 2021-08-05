@@ -26,9 +26,7 @@ class SatImageDataset(Dataset):
             std = standard deviation for each image channel, optional
             flip = True for random horizontal and vertical flips
             flip_prob = Probability of flipping an image
-            classes = either 16 or 6 depending on problem
-        Returns:
-            (image_list , label_list, geo_list)"""
+            classes = either 16 or 6 depending on problem"""
         
         self.test = test
         self.colab = colab
@@ -37,7 +35,7 @@ class SatImageDataset(Dataset):
         
         # Folder options for loading data
         self.local_folder = 'C:/Users/rdroz/Documents/GitHub/Sat_Image_Dataset/Dataset/'
-        self.colab_folder = '/content/Sat_Image_Dataset/'
+        self.colab_folder = '/content/Sat_Image_Dataset/Dataset/'
                 
         # Variables that will be used in loading data
         self.bounds_16class = [2**0, 2**1, 2**2, 2**3, 2**4,2**5, 2**6, 2**7,
@@ -254,5 +252,14 @@ def sat_image_dataset_tests():
     assert np.abs(std.sum().item() - (1 * std.shape[1])) < 1e-10, \
         '''Calculated standard deviation after normalization is not equal
         to 1 for all channels'''
+        
+    ### Classification Test
+    for i, label in enumerate(test_dataset.y):
+        combined = []
+        combined.extend(test_dataset.bounds_16class)
+        combined.append(label[1].item())
+        combined.sort()
+        assert combined.index(label[1].item()) == label[2].item(), \
+            'Class labels are not being calculated correctly'
     
 sat_image_dataset_tests()
